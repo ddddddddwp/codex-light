@@ -1,0 +1,7 @@
+{
+  "hook_event_name": "SessionStart",
+  "session_id": "session-1",
+  "cwd": "C:\\code\\demo",
+  "model": "gpt-5.5",
+  "permission_mode": "default"
+}

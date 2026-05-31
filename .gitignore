@@ -1,0 +1,13 @@
+node_modules/
+dist/
+release/
+coverage/
+test-results/
+playwright-report/
+.env
+.DS_Store
+*.log
+.codegraph/
+.superpowers/
+.agents/
+.codex/

@@ -1,0 +1,16 @@
+{
+  "change": "codex-traffic-light-monitor",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "ast-handoff.sh",
+  "context_hash": "65d1194543571a0c8b4f91a9623993f8ada9b7e7ff6f797ed97af8c3fd00bd44",
+  "files": [
+    { "path": "openspec/changes/codex-traffic-light-monitor/proposal.md", "sha256": "f8df813c5d042ae34e29dd8b0a177c2cdc101de79260fcc979546fde984d13b6" },
+    { "path": "openspec/changes/codex-traffic-light-monitor/design.md", "sha256": "003d4839da9a82cea1c7c446464b94dfe922c424cba4d06afbfeee8599287b00" },
+    { "path": "openspec/changes/codex-traffic-light-monitor/tasks.md", "sha256": "5bfb698defebe98af381be2877c1120e29ab1b41d0267b2c16e4626a67fb153c" },
+    { "path": "openspec/changes/codex-traffic-light-monitor/specs/codex-status-ingestion/spec.md", "sha256": "671d2356ba952a422addd1c809af45c9dc03acb39271993ca61ccc19657daa54" },
+    { "path": "openspec/changes/codex-traffic-light-monitor/specs/top-island-overlay/spec.md", "sha256": "883dbc20267a43dfb2cb0d826a225bc395ef1ae4a69c11aeac5ce961f089bd5a" },
+    { "path": "openspec/changes/codex-traffic-light-monitor/specs/win11-app-operations/spec.md", "sha256": "822ec04827e2abf9304670582d6d012c7deafa61f437b4cb17333ee110642a5f" }
+  ]
+}

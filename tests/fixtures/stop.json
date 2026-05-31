@@ -1,0 +1,8 @@
+{
+  "hook_event_name": "Stop",
+  "session_id": "session-1",
+  "turn_id": "turn-1",
+  "cwd": "C:\\code\\demo",
+  "model": "gpt-5.5",
+  "permission_mode": "default"
+}

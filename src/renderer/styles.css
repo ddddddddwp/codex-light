@@ -1,0 +1,143 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+.island {
+  margin: 8px auto 0;
+  color: #fff;
+  background: rgba(12, 16, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+  transition: width 180ms ease, min-height 180ms ease, border-radius 180ms ease;
+  user-select: none;
+}
+
+.compact {
+  width: 260px;
+  min-height: 52px;
+  border-radius: 999px;
+}
+
+.expanded {
+  width: 540px;
+  min-height: 94px;
+  border-radius: 30px;
+}
+
+.summary {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  color: #ff5d5d;
+  background: #ff5d5d;
+  box-shadow: 0 0 18px currentColor;
+  flex: 0 0 auto;
+}
+
+.state-running .status-dot {
+  color: #31d27c;
+  background: #31d27c;
+}
+
+.state-waiting .status-dot {
+  color: #ffd43b;
+  background: #ffd43b;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.state-idle .status-dot,
+.state-completed .status-dot,
+.state-error .status-dot {
+  color: #ff5d5d;
+  background: #ff5d5d;
+}
+
+.summary-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.18;
+}
+
+.summary-text strong {
+  font-size: 14px;
+}
+
+.summary-text span,
+.details small {
+  color: #aeb7c4;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  margin-left: auto;
+  color: #aeb7c4;
+  font-size: 12px;
+}
+
+.details {
+  display: grid;
+  gap: 8px;
+  padding: 0 18px 14px;
+}
+
+.details p {
+  margin: 0;
+  color: #aeb7c4;
+  font-size: 12px;
+}
+
+.session {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.session div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.session span {
+  color: #aeb7c4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.74;
+  }
+}

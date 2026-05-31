@@ -1,0 +1,18 @@
+workflow: full
+phase: archive
+build_mode: executing-plans
+isolation: branch
+verify_mode: full
+base_ref: a75acb838bc408f681456c125916276fb2d075a3
+design_doc: docs/superpowers/specs/2026-05-31-codex-traffic-light-monitor-design.md
+plan: docs/superpowers/plans/2026-05-31-codex-traffic-light-monitor.md
+verify_result: pass
+verification_report: docs/superpowers/reports/2026-05-31-codex-traffic-light-monitor-verify.md
+branch_status: handled
+created_at: 2026-05-31
+verified_at: 2026-05-31
+archived: true
+handoff_context: openspec/changes/codex-traffic-light-monitor/.astrolabe/handoff/design-context.json
+handoff_hash: 65d1194543571a0c8b4f91a9623993f8ada9b7e7ff6f797ed97af8c3fd00bd44
+build_command: npm run build
+verify_command: npm run lint && npm run typecheck && npm test && npm run test:visual && npm run package:win:dir
