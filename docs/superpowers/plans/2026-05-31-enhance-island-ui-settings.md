@@ -65,7 +65,7 @@ Expected: all three commands pass before product code edits begin.
 - Create: `src/main/overlay-settings.ts`
 - Create: `tests/main/overlay-settings.test.ts`
 
-- [ ] **Step 1.1: Write failing settings tests**
+- [x] **Step 1.1: Write failing settings tests**
 
 Create tests that assert these defaults and boundaries:
 
@@ -98,7 +98,7 @@ npm test -- tests/main/overlay-settings.test.ts
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 1.2: Implement the settings module**
+- [x] **Step 1.2: Implement the settings module**
 
 Implement these exports:
 
@@ -127,7 +127,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
 
 Add `normalizeOverlaySettings`, `loadOverlaySettings(userDataDir)`, and `saveOverlaySettings(userDataDir, settings)` using atomic JSON writes where practical.
 
-- [ ] **Step 1.3: Verify settings tests pass**
+- [x] **Step 1.3: Verify settings tests pass**
 
 Run:
 
@@ -143,7 +143,7 @@ Expected: PASS.
 - Create: `src/main/overlay-bounds.ts`
 - Create: `tests/main/overlay-bounds.test.ts`
 
-- [ ] **Step 2.1: Write failing bounds tests**
+- [x] **Step 2.1: Write failing bounds tests**
 
 Cover primary behavior:
 
@@ -169,7 +169,7 @@ npm test -- tests/main/overlay-bounds.test.ts
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 2.2: Implement pure bounds helpers**
+- [x] **Step 2.2: Implement pure bounds helpers**
 
 Implement:
 
@@ -183,7 +183,7 @@ export function computeOverlayBounds(display: DisplayLike, mode: OverlayMode, se
 
 Keep base sizes equal to current behavior: compact `300x78`, expanded `580x128`.
 
-- [ ] **Step 2.3: Verify bounds tests pass**
+- [x] **Step 2.3: Verify bounds tests pass**
 
 Run:
 
@@ -202,7 +202,7 @@ Expected: PASS.
 - Test: `tests/main/overlay-bounds.test.ts`
 - Test: `tests/main/overlay-settings.test.ts`
 
-- [ ] **Step 3.1: Extend IPC types**
+- [x] **Step 3.1: Extend IPC types**
 
 Add DTOs:
 
@@ -228,11 +228,11 @@ updateSettings(patch: Partial<OverlaySettings>): Promise<CodexLightSettingsState
 onSettingsChanged(callback: (state: CodexLightSettingsState) => void): () => void;
 ```
 
-- [ ] **Step 3.2: Wire preload IPC**
+- [x] **Step 3.2: Wire preload IPC**
 
 In `src/main/preload.ts`, expose `ipcRenderer.invoke('settings:get')`, `ipcRenderer.invoke('settings:update', patch)`, and an event listener for `settings:changed`.
 
-- [ ] **Step 3.3: Apply settings in main**
+- [x] **Step 3.3: Apply settings in main**
 
 In `src/main/main.ts`:
 
@@ -243,7 +243,7 @@ In `src/main/main.ts`:
 - listen to `screen.on('display-added')`, `screen.on('display-removed')`, and `screen.on('display-metrics-changed')`;
 - add tray item `Settings` above `Show Island`.
 
-- [ ] **Step 3.4: Run focused validation**
+- [x] **Step 3.4: Run focused validation**
 
 Run:
 
@@ -262,7 +262,7 @@ Expected: PASS.
 - Modify: `src/renderer/demo-snapshot.ts`
 - Modify: `tests/renderer/App.test.tsx`
 
-- [ ] **Step 4.1: Write failing renderer tests**
+- [x] **Step 4.1: Write failing renderer tests**
 
 Add tests for compact mode:
 
@@ -292,7 +292,7 @@ npm test -- tests/renderer/App.test.tsx
 
 Expected: FAIL until presentation is updated.
 
-- [ ] **Step 4.2: Implement compact and expanded metadata**
+- [x] **Step 4.2: Implement compact and expanded metadata**
 
 Compact:
 
@@ -309,7 +309,7 @@ Expanded:
 - render elapsed time;
 - render source and session count.
 
-- [ ] **Step 4.3: Add elapsed-time helper**
+- [x] **Step 4.3: Add elapsed-time helper**
 
 Keep it renderer-only:
 
@@ -322,7 +322,7 @@ function formatElapsed(session: CodexSession, now: Date): string {
 }
 ```
 
-- [ ] **Step 4.4: Verify renderer tests pass**
+- [x] **Step 4.4: Verify renderer tests pass**
 
 Run:
 

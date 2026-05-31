@@ -32,8 +32,8 @@ body,
 
 .expanded {
   width: 540px;
-  min-height: 94px;
-  border-radius: 30px;
+  min-height: 112px;
+  border-radius: 24px;
 }
 
 .summary {
@@ -74,19 +74,13 @@ body,
 
 .summary-text {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  display: block;
   line-height: 1.18;
 }
 
 .summary-text strong {
+  display: block;
   font-size: 14px;
-}
-
-.summary-text span,
-.details small {
-  color: #aeb7c4;
-  font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,12 +90,13 @@ body,
   margin-left: auto;
   color: #aeb7c4;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .details {
   display: grid;
-  gap: 8px;
-  padding: 0 18px 14px;
+  gap: 6px;
+  padding: 0 16px 10px;
 }
 
 .details p {
@@ -111,20 +106,89 @@ body,
 }
 
 .session {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
+  display: grid;
+  gap: 6px;
   font-size: 12px;
-}
-
-.session div {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
 }
 
-.session span {
+.session-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.session-title {
+  flex: 0 1 34%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-action {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+}
+
+.session-label,
+.meta-label {
+  color: #778396;
+  flex: 0 0 auto;
+}
+
+.session-value,
+.meta-value {
+  min-width: 0;
   color: #aeb7c4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+.meta-item {
+  display: inline-flex;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.meta-model {
+  flex-basis: 78px;
+}
+
+.meta-cwd {
+  flex: 1 1 160px;
+}
+
+.meta-elapsed {
+  flex-basis: 58px;
+}
+
+.meta-source {
+  flex-basis: 102px;
+}
+
+.meta-count {
+  flex-basis: 72px;
+}
+
+.details small {
+  color: #778396;
+  font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

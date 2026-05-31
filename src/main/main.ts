@@ -10,18 +10,27 @@ import {
 import { getRuntimeDir, getStateFile } from '../core/runtime-paths';
 import { readSnapshot } from '../core/storage';
 import { detectCodexDesktopProcess, shouldPublishDesktopFallback } from './desktop-fallback';
+import type { CodexLightSettingsState, OverlayDisplayInfo } from './ipc-types';
+import { computeOverlayBounds, selectOverlayDisplay, type DisplayLike, type OverlayMode } from './overlay-bounds';
+import {
+  DEFAULT_OVERLAY_SETTINGS,
+  loadOverlaySettings,
+  normalizeOverlaySettings,
+  saveOverlaySettings,
+  type OverlaySettings
+} from './overlay-settings';
 import { createSnapshotSync } from './snapshot-sync';
 
 let overlay: BrowserWindow | null = null;
+let settingsWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
-
-const COMPACT = { width: 300, height: 78 };
-const EXPANDED = { width: 580, height: 128 };
+let overlaySettings: OverlaySettings = { ...DEFAULT_OVERLAY_SETTINGS };
+let isPinnedExpanded = false;
 
 async function createOverlay(): Promise<void> {
   overlay = new BrowserWindow({
-    width: COMPACT.width,
-    height: COMPACT.height,
+    width: 300,
+    height: 78,
     frame: false,
     transparent: true,
     resizable: false,
@@ -37,7 +46,7 @@ async function createOverlay(): Promise<void> {
   });
 
   overlay.setAlwaysOnTop(true, 'screen-saver');
-  positionOverlay(COMPACT);
+  applyOverlayBounds();
 
   if (process.env.VITE_DEV_SERVER_URL) {
     await overlay.loadURL(process.env.VITE_DEV_SERVER_URL);
@@ -48,27 +57,126 @@ async function createOverlay(): Promise<void> {
   overlay.once('ready-to-show', () => overlay?.showInactive());
 }
 
-function positionOverlay(size: { width: number; height: number }): void {
+function applyOverlayBounds(): void {
   if (!overlay) return;
-  const display = screen.getPrimaryDisplay();
-  const { x, y, width } = display.workArea;
-  overlay.setBounds({
-    x: Math.round(x + width / 2 - size.width / 2),
-    y: y + 10,
-    width: size.width,
-    height: size.height
-  });
+
+  const display = selectOverlayDisplay(getDisplayLikes(), overlaySettings.targetDisplayId);
+  overlay.setBounds(computeOverlayBounds(display, getOverlayMode(), overlaySettings));
+  overlay.setOpacity(overlaySettings.opacity);
+}
+
+function getOverlayMode(): OverlayMode {
+  return isPinnedExpanded ? 'expanded' : 'compact';
+}
+
+function getDisplayLikes(): DisplayLike[] {
+  const primaryId = screen.getPrimaryDisplay().id;
+
+  return screen.getAllDisplays().map((display) => ({
+    id: display.id,
+    workArea: display.workArea,
+    isPrimary: display.id === primaryId
+  }));
+}
+
+function getSettingsState(): CodexLightSettingsState {
+  const primaryId = screen.getPrimaryDisplay().id;
+
+  return {
+    settings: { ...overlaySettings },
+    displays: screen.getAllDisplays().map((display, index): OverlayDisplayInfo => ({
+      id: display.id,
+      label: display.label || `Display ${index + 1}`,
+      bounds: {
+        x: display.bounds.x,
+        y: display.bounds.y,
+        width: display.bounds.width,
+        height: display.bounds.height
+      },
+      isPrimary: display.id === primaryId
+    }))
+  };
+}
+
+function publishSettingsChanged(): void {
+  const state = getSettingsState();
+  overlay?.webContents.send('settings:changed', state);
+  settingsWindow?.webContents.send('settings:changed', state);
+}
+
+function handleDisplayChange(): void {
+  applyOverlayBounds();
+  publishSettingsChanged();
 }
 
 function createTray(): void {
   tray = new Tray(createTrayImage());
   tray.setToolTip('Codex Light');
   tray.setContextMenu(Menu.buildFromTemplate([
+    {
+      label: 'Settings',
+      click: () => {
+        createOrShowSettingsWindow().catch((error: unknown) => {
+          console.error('Failed to open settings window:', error);
+        });
+      }
+    },
     { label: 'Show Island', click: () => overlay?.showInactive() },
     { label: 'Hide Island', click: () => overlay?.hide() },
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() }
   ]));
+}
+
+async function createOrShowSettingsWindow(): Promise<void> {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+
+  const window = new BrowserWindow({
+    width: 760,
+    height: 560,
+    frame: true,
+    resizable: true,
+    show: false,
+    webPreferences: {
+      preload: path.join(app.getAppPath(), 'dist', 'preload', 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  settingsWindow = window;
+
+  window.once('ready-to-show', () => window.show());
+  window.on('closed', () => {
+    if (settingsWindow === window) {
+      settingsWindow = null;
+    }
+  });
+
+  try {
+    if (process.env.VITE_DEV_SERVER_URL) {
+      await window.loadURL(`${process.env.VITE_DEV_SERVER_URL}?view=settings`);
+    } else {
+      await window.loadFile(path.join(app.getAppPath(), 'dist', 'renderer', 'index.html'), {
+        query: { view: 'settings' }
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load settings window:', error);
+
+    if (settingsWindow === window) {
+      settingsWindow = null;
+    }
+
+    if (!window.isDestroyed()) {
+      window.destroy();
+    }
+
+    throw error;
+  }
 }
 
 function watchSnapshot(): void {
@@ -122,12 +230,34 @@ function createTrayImage(): Electron.NativeImage {
 }
 
 ipcMain.on('set-pinned-expanded', (_event, value: boolean) => {
-  positionOverlay(value ? EXPANDED : COMPACT);
+  isPinnedExpanded = value;
+  applyOverlayBounds();
+});
+
+ipcMain.handle('settings:get', () => getSettingsState());
+
+ipcMain.handle('settings:update', async (_event, patch: Partial<OverlaySettings>) => {
+  const nextSettings = normalizeOverlaySettings({ ...overlaySettings, ...patch });
+  await saveOverlaySettings(app.getPath('userData'), nextSettings);
+  overlaySettings = nextSettings;
+  applyOverlayBounds();
+  publishSettingsChanged();
+  return getSettingsState();
 });
 
 app.whenReady().then(async () => {
+  try {
+    overlaySettings = await loadOverlaySettings(app.getPath('userData'));
+  } catch (error) {
+    console.error('Failed to load overlay settings; using defaults:', error);
+    overlaySettings = { ...DEFAULT_OVERLAY_SETTINGS };
+  }
+
   await createOverlay();
   createTray();
+  screen.on('display-added', handleDisplayChange);
+  screen.on('display-removed', handleDisplayChange);
+  screen.on('display-metrics-changed', handleDisplayChange);
   watchSnapshot();
   startDesktopFallbackPolling();
 });
