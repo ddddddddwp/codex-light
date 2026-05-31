@@ -57,7 +57,7 @@ jobs:
 
       - name: Ensure tag is new
         run: |
-          if (git rev-parse "v$env:VERSION" 2>$null) {
+          if (git rev-parse --verify --quiet "refs/tags/v$env:VERSION") {
             Write-Error "Tag v$env:VERSION already exists."
             exit 1
           }
@@ -89,8 +89,7 @@ jobs:
 
       - name: Push release commit and tag
         run: |
-          git push origin HEAD:main
-          git push origin "v$env:VERSION"
+          git push --atomic origin HEAD:main "v$env:VERSION"
 
       - name: Publish GitHub Release
         env:

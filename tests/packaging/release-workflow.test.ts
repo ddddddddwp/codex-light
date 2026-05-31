@@ -35,11 +35,11 @@ describe('release workflow', () => {
     expect(workflow).toContain('npm run package:win');
     expect(workflow).toContain('Test-Path "dist/Codex-Light-Setup-$env:VERSION.exe"');
     expectInOrder(workflow, 'Test-Path "dist/Codex-Light-Setup-$env:VERSION.exe"', 'git add package.json package-lock.json');
+    expect(workflow).toContain('git rev-parse --verify --quiet "refs/tags/v$env:VERSION"');
     expect(workflow).toContain('git add package.json package-lock.json');
     expect(workflow).toContain('git commit -m "chore(release): v$env:VERSION"');
     expect(workflow).toContain('git tag "v$env:VERSION"');
-    expect(workflow).toContain('git push origin HEAD:main');
-    expect(workflow).toContain('git push origin "v$env:VERSION"');
+    expect(workflow).toContain('git push --atomic origin HEAD:main "v$env:VERSION"');
     expect(workflow).toContain('gh release create "v$env:VERSION"');
     expect(workflow).toContain('--verify-tag');
     expect(workflow).toContain('dist/Codex-Light-Setup-$env:VERSION.exe');
