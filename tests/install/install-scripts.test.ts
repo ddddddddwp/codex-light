@@ -27,6 +27,31 @@ describe('installer scripts', () => {
     });
   });
 
+  it('configures NSIS to close old processes and optionally start on login', () => {
+    const packageJson = JSON.parse(read('package.json')) as {
+      build?: {
+        nsis?: {
+          include?: string;
+        };
+      };
+    };
+    const installerInclude = read('scripts/nsis/installer.nsh');
+
+    expect(packageJson.build?.nsis?.include).toBe('scripts/nsis/installer.nsh');
+    expect(installerInclude).toContain('!macro customCheckAppRunning');
+    expect(installerInclude).toContain("Get-Process -Name 'Codex Light'");
+    expect(installerInclude).toContain('Stop-Process -Force');
+    expect(installerInclude).toContain('taskkill /F /IM "Codex Light.exe" /T');
+    expect(installerInclude).toContain('!macro customPageAfterChangeDir');
+    expect(installerInclude).toContain('Page custom StartOnLoginPageCreate StartOnLoginPageLeave');
+    expect(installerInclude).toContain('Start Codex Light when I sign in');
+    expect(installerInclude).toContain('${NSD_Uncheck} $StartOnLoginCheckbox');
+    expect(installerInclude).toContain('!macro customInstall');
+    expect(installerInclude).toContain('CreateShortCut "$SMSTARTUP\\Codex Light.lnk"');
+    expect(installerInclude).toContain('!macro customUnInstall');
+    expect(installerInclude).toContain('Delete "$SMSTARTUP\\Codex Light.lnk"');
+  });
+
   it('provides a Win11 installer that installs the app and shortcuts per user', () => {
     const script = read('scripts/install-win11.ps1');
 
