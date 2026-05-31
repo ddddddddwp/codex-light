@@ -9,5 +9,6 @@ playwright-report/
 *.log
 .codegraph/
 .superpowers/
+.worktrees/
 .agents/
 .codex/
