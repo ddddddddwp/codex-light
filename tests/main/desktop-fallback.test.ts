@@ -25,6 +25,15 @@ describe('detectCodexDesktopProcess', () => {
     expect(detected).toBe(true);
   });
 
+  it('does not detect Codex Light itself as a Codex desktop process', async () => {
+    const detected = await detectCodexDesktopProcess({
+      platform: 'win32',
+      run: async () => ({ stdout: 'Codex Light\r\n' })
+    });
+
+    expect(detected).toBe(false);
+  });
+
   it('does not publish desktop fallback when a CLI snapshot already has sessions', () => {
     expect(shouldPublishDesktopFallback({
       version: 1,

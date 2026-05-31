@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import type { CodexLightSnapshot } from '../core/types';
 
 const execFileAsync = promisify(execFile);
+const CODEX_DESKTOP_PROCESS_NAMES = new Set(['codex', 'codex desktop', 'chatgpt']);
 
 type Platform = NodeJS.Platform | 'linux';
 type RunProcessQuery = (file: string, args: string[]) => Promise<{ stdout: string }>;
@@ -24,9 +25,9 @@ export async function detectCodexDesktopProcess(
     const { stdout } = await run('powershell.exe', [
       '-NoProfile',
       '-Command',
-      "Get-Process | Where-Object { $_.ProcessName -match 'codex|chatgpt' } | Select-Object -First 1 -ExpandProperty ProcessName"
+      "Get-Process | Where-Object { @('Codex', 'Codex Desktop', 'ChatGPT') -contains $_.ProcessName } | Select-Object -First 1 -ExpandProperty ProcessName"
     ]);
-    return stdout.trim().length > 0;
+    return stdout.split(/\r?\n/).some(isCodexDesktopProcessName);
   } catch {
     return false;
   }
@@ -34,4 +35,8 @@ export async function detectCodexDesktopProcess(
 
 export function shouldPublishDesktopFallback(snapshot: CodexLightSnapshot | null): boolean {
   return !snapshot || snapshot.sessions.length === 0;
+}
+
+function isCodexDesktopProcessName(processName: string): boolean {
+  return CODEX_DESKTOP_PROCESS_NAMES.has(processName.trim().toLowerCase());
 }

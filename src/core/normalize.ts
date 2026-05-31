@@ -2,9 +2,12 @@ import path from 'node:path';
 import type {
   CodexLightEvent,
   CodexLightSnapshot,
+  CodexSession,
   CodexLightState,
   RawCodexHookPayload
 } from './types';
+
+export const DEFAULT_CLI_SESSION_STALE_MS = 120_000;
 
 const PRIORITY: Record<CodexLightState, number> = {
   waiting: 5,
@@ -35,6 +38,8 @@ const PERMISSION_GATED_TOOLS = new Set([
   'shell',
   'write'
 ]);
+
+const STALE_CLI_STATES = new Set<CodexLightState>(['running', 'waiting']);
 
 export function normalizeHookPayload(input: unknown, now = new Date()): CodexLightEvent {
   if (!isRecord(input)) {
@@ -115,19 +120,59 @@ export function aggregateSessions(events: CodexLightEvent[], now = new Date()): 
     };
   });
 
-  const activeSessions = sessions.filter((session) => session.state !== 'idle');
-  const globalState = sessions.reduce<CodexLightState>((winner, session) => (
-    PRIORITY[session.state] > PRIORITY[winner] ? session.state : winner
-  ), 'idle');
-
   return {
     version: 1,
     generatedAt: now.toISOString(),
-    globalState,
-    activeSessionCount: activeSessions.length,
+    globalState: globalStateForSessions(sessions),
+    activeSessionCount: activeSessionCount(sessions),
     sessions,
     diagnostics: []
   };
+}
+
+export function expireStaleCliSessions(
+  snapshot: CodexLightSnapshot,
+  now = new Date(),
+  staleMs = DEFAULT_CLI_SESSION_STALE_MS
+): CodexLightSnapshot {
+  const nowMs = now.getTime();
+  if (!Number.isFinite(nowMs) || staleMs <= 0) return snapshot;
+
+  const sessions = snapshot.sessions.filter((session) => !isStaleCliSession(session, nowMs, staleMs));
+  if (sessions.length === snapshot.sessions.length) return snapshot;
+
+  const expiredCount = snapshot.sessions.length - sessions.length;
+  return {
+    ...snapshot,
+    globalState: globalStateForSessions(sessions),
+    activeSessionCount: activeSessionCount(sessions),
+    sessions,
+    diagnostics: [
+      ...snapshot.diagnostics,
+      {
+        level: 'warning',
+        message: `Expired ${expiredCount} stale CLI session${expiredCount === 1 ? '' : 's'} after ${Math.round(staleMs / 1000)} seconds without hook updates.`,
+        createdAt: now.toISOString()
+      }
+    ]
+  };
+}
+
+function isStaleCliSession(session: CodexSession, nowMs: number, staleMs: number): boolean {
+  if (session.source !== 'cli' || !STALE_CLI_STATES.has(session.state)) return false;
+
+  const updatedAtMs = Date.parse(session.updatedAt);
+  return Number.isFinite(updatedAtMs) && nowMs - updatedAtMs > staleMs;
+}
+
+function activeSessionCount(sessions: CodexSession[]): number {
+  return sessions.filter((session) => session.state !== 'idle').length;
+}
+
+function globalStateForSessions(sessions: CodexSession[]): CodexLightState {
+  return sessions.reduce<CodexLightState>((winner, session) => (
+    PRIORITY[session.state] > PRIORITY[winner] ? session.state : winner
+  ), 'idle');
 }
 
 function chooseEffectiveEvent(events: CodexLightEvent[]): CodexLightEvent {
@@ -175,6 +220,10 @@ function isPermissionGatedTool(payload: RawCodexHookPayload): boolean {
 }
 
 function explicitApprovalRequired(payload: RawCodexHookPayload): boolean | undefined {
+  if (typeof payload.permission_mode === 'string' && normalizeToolName(payload.permission_mode) === 'bypasspermissions') {
+    return false;
+  }
+
   for (const field of APPROVAL_FLAG_FIELDS) {
     const value = payload[field];
     if (typeof value === 'boolean') return value;

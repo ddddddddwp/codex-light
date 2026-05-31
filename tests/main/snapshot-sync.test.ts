@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CodexLightSnapshot } from '../../src/core/types';
+import { expireStaleCliSessions } from '../../src/core/normalize';
 import { createSnapshotSync } from '../../src/main/snapshot-sync';
 
 const baseSnapshot: CodexLightSnapshot = {
@@ -61,5 +62,22 @@ describe('createSnapshotSync', () => {
     sync.startPolling();
 
     expect(setIntervalFn).toHaveBeenCalledWith(expect.any(Function), 1_000);
+  });
+
+  it('publishes an idle snapshot when an unchanged CLI snapshot becomes stale', async () => {
+    let now = new Date('2026-05-31T00:00:30.000Z');
+    const publish = vi.fn();
+    const sync = createSnapshotSync({
+      read: async () => expireStaleCliSessions(baseSnapshot, now, 60_000),
+      publish
+    });
+
+    await sync.pollOnce();
+    now = new Date('2026-05-31T00:01:01.000Z');
+    await sync.pollOnce();
+
+    expect(publish).toHaveBeenCalledTimes(2);
+    expect(publish.mock.calls[1][0].globalState).toBe('idle');
+    expect(publish.mock.calls[1][0].sessions).toEqual([]);
   });
 });

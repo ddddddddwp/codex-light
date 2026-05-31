@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import sessionStart from '../fixtures/session-start.json';
 import permissionRequest from '../fixtures/permission-request.json';
 import stop from '../fixtures/stop.json';
-import { aggregateSessions, normalizeHookPayload } from '../../src/core/normalize';
+import { aggregateSessions, expireStaleCliSessions, normalizeHookPayload } from '../../src/core/normalize';
 
 describe('normalizeHookPayload', () => {
   it('maps Codex hook events to the requested traffic-light states', () => {
@@ -68,6 +68,18 @@ describe('normalizeHookPayload', () => {
     expect(event.action).toContain('approval');
   });
 
+  it('does not treat bypassed tool use as waiting for approval', () => {
+    const event = normalizeHookPayload({
+      ...sessionStart,
+      hook_event_name: 'PreToolUse',
+      permission_mode: 'bypassPermissions',
+      tool_name: 'Bash'
+    });
+
+    expect(event.state).toBe('running');
+    expect(event.action).toBe('Running Bash');
+  });
+
   it('maps Stop to completed', () => {
     const event = normalizeHookPayload(stop);
 
@@ -81,5 +93,20 @@ describe('normalizeHookPayload', () => {
 
     expect(snapshot.globalState).toBe('waiting');
     expect(snapshot.activeSessionCount).toBe(1);
+  });
+
+  it('expires stale CLI running sessions so a dead WSL hook does not stay green forever', () => {
+    const running = normalizeHookPayload({
+      ...sessionStart,
+      hook_event_name: 'UserPromptSubmit',
+      turn_id: 'turn-1'
+    }, new Date('2026-05-31T00:00:00.000Z'));
+    const snapshot = aggregateSessions([running], new Date('2026-05-31T00:00:00.000Z'));
+
+    const expired = expireStaleCliSessions(snapshot, new Date('2026-05-31T00:02:01.000Z'), 120_000);
+
+    expect(expired.globalState).toBe('idle');
+    expect(expired.activeSessionCount).toBe(0);
+    expect(expired.sessions).toEqual([]);
   });
 });

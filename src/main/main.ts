@@ -1,7 +1,12 @@
 import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } from 'electron';
 import path from 'node:path';
 import { watch } from 'chokidar';
-import { aggregateSessions, createDesktopFallbackEvent } from '../core/normalize';
+import {
+  DEFAULT_CLI_SESSION_STALE_MS,
+  aggregateSessions,
+  createDesktopFallbackEvent,
+  expireStaleCliSessions
+} from '../core/normalize';
 import { getRuntimeDir, getStateFile } from '../core/runtime-paths';
 import { readSnapshot } from '../core/storage';
 import { detectCodexDesktopProcess, shouldPublishDesktopFallback } from './desktop-fallback';
@@ -69,8 +74,12 @@ function createTray(): void {
 function watchSnapshot(): void {
   const runtimeDir = getRuntimeDir();
   const stateFile = getStateFile(runtimeDir);
+  const staleMs = getCliSessionStaleMs();
   const sync = createSnapshotSync({
-    read: () => readSnapshot(runtimeDir),
+    read: async () => {
+      const snapshot = await readSnapshot(runtimeDir);
+      return snapshot ? expireStaleCliSessions(snapshot, new Date(), staleMs) : null;
+    },
     publish: (snapshot) => overlay?.webContents.send('snapshot', snapshot)
   });
   const watcher = watch(stateFile, { ignoreInitial: false, awaitWriteFinish: true });
@@ -81,9 +90,12 @@ function watchSnapshot(): void {
 }
 
 function startDesktopFallbackPolling(): void {
+  const runtimeDir = getRuntimeDir();
+  const staleMs = getCliSessionStaleMs();
   const poll = async () => {
     if (!overlay) return;
-    const existing = await readSnapshot(getRuntimeDir());
+    const snapshot = await readSnapshot(runtimeDir);
+    const existing = snapshot ? expireStaleCliSessions(snapshot, new Date(), staleMs) : null;
     if (!shouldPublishDesktopFallback(existing)) return;
     if (await detectCodexDesktopProcess()) {
       overlay.webContents.send('snapshot', aggregateSessions([createDesktopFallbackEvent()]));
@@ -92,6 +104,11 @@ function startDesktopFallbackPolling(): void {
 
   void poll();
   setInterval(() => void poll(), 10_000);
+}
+
+function getCliSessionStaleMs(env = process.env): number {
+  const value = Number(env.CODEX_LIGHT_CLI_STALE_MS);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_CLI_SESSION_STALE_MS;
 }
 
 function createTrayImage(): Electron.NativeImage {
