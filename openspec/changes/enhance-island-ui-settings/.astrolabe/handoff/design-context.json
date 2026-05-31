@@ -1,0 +1,15 @@
+{
+  "change": "enhance-island-ui-settings",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "ast-handoff.sh",
+  "context_hash": "f224a96b8b74f35313d6ff940c1f3a441368f3bb0a2c24bd20fe5442273b385f",
+  "files": [
+    { "path": "openspec/changes/enhance-island-ui-settings/proposal.md", "sha256": "27fb8ad5f4d3de838b24f5317ca54c1f8e20a4ccbdba0bd3ce84d9a17fdf72da" },
+    { "path": "openspec/changes/enhance-island-ui-settings/design.md", "sha256": "fee1144b7452ea1a1f0bf1f9b7677bac8144be33c358444a7c39060a6df4015e" },
+    { "path": "openspec/changes/enhance-island-ui-settings/tasks.md", "sha256": "9f4dcfc5b9495a4e13d5ca1503264d3b7cfcf2dbb2d87f13e385a103917f9f68" },
+    { "path": "openspec/changes/enhance-island-ui-settings/specs/top-island-overlay/spec.md", "sha256": "d61924147e7c93698c997ddc293e16e11969b9aa472cedae010db4b8fcc42f57" },
+    { "path": "openspec/changes/enhance-island-ui-settings/specs/win11-app-operations/spec.md", "sha256": "5490d5cf71af849c9d7d2e73eb467df8e8d5309679b64ed06c5108cfd211a267" }
+  ]
+}
