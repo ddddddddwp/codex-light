@@ -12,7 +12,8 @@ Maintainers choose one version input:
 The workflow bumps `package.json` and `package-lock.json`, validates the
 release, builds the Windows installer with `npm run package:win`, verifies the
 installer asset exists, then commits `chore(release): vX.Y.Z` to `main`, tags
-`vX.Y.Z`, and publishes a GitHub Release containing:
+`vX.Y.Z`, pushes the release commit and tag, and publishes a GitHub Release
+containing:
 
 ```text
 dist/Codex-Light-Setup-X.Y.Z.exe
