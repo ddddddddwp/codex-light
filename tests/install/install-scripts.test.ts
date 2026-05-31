@@ -41,7 +41,8 @@ describe('installer scripts', () => {
     expect(installerInclude).toContain('!ifndef BUILD_UNINSTALLER');
     expect(installerInclude).toContain('!macro customCheckAppRunning');
     expect(installerInclude).toContain("Get-Process -Name 'Codex Light'");
-    expect(installerInclude).toContain("Where-Object { $$_.Path -and $$_.Path.StartsWith('$INSTDIR', [System.StringComparison]::CurrentCultureIgnoreCase) }");
+    expect(installerInclude).toContain('$$installDir = $$args[0]');
+    expect(installerInclude).toContain('Where-Object { $$_.Path -and $$_.Path.StartsWith($$installDir, [System.StringComparison]::CurrentCultureIgnoreCase) }');
     expect(installerInclude).toContain('Stop-Process -Force');
     expect(installerInclude).toContain('taskkill /F /IM "Codex Light.exe" /T');
     expect(installerInclude).toContain('/FI "USERNAME eq %USERNAME%"');
@@ -52,7 +53,11 @@ describe('installer scripts', () => {
     expect(installerInclude).toContain('${NSD_Check} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('${NSD_Uncheck} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('!macro customInstall');
+    expect(installerInclude).toContain('Var StartupShellWasAllUsers');
+    expect(installerInclude).toContain('${If} $installMode == "all"');
+    expect(installerInclude).toContain('StrCpy $StartupShellWasAllUsers "1"');
     expect(installerInclude).toContain('SetShellVarContext current');
+    expect(installerInclude).toContain('${If} $StartupShellWasAllUsers == "1"');
     expect(installerInclude).toContain('${ElseIf} $StartOnLoginState == ${BST_UNCHECKED}');
     expect(installerInclude).toContain('CreateShortCut "$SMSTARTUP\\Codex Light.lnk"');
     expect(installerInclude).toContain('!macro customUnInstall');

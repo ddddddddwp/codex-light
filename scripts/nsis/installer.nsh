@@ -1,5 +1,7 @@
 !include LogicLib.nsh
 
+Var StartupShellWasAllUsers
+
 !ifndef BUILD_UNINSTALLER
 !include MUI2.nsh
 !include nsDialogs.nsh
@@ -9,21 +11,24 @@ Var StartOnLoginState
 !endif
 
 !macro useCurrentStartupShell
-  !ifdef INSTALL_MODE_PER_ALL_USERS
+  StrCpy $StartupShellWasAllUsers "0"
+  ${If} $installMode == "all"
+    StrCpy $StartupShellWasAllUsers "1"
     SetShellVarContext current
-  !endif
+  ${EndIf}
 !macroend
 
 !macro restoreStartupShell
-  !ifdef INSTALL_MODE_PER_ALL_USERS
+  ${If} $StartupShellWasAllUsers == "1"
     SetShellVarContext all
-  !endif
+    StrCpy $StartupShellWasAllUsers "0"
+  ${EndIf}
 !macroend
 
 !ifndef BUILD_UNINSTALLER
 !macro customCheckAppRunning
   DetailPrint "Closing existing Codex Light processes."
-  nsExec::ExecToLog `"$PowerShellPath" -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name 'Codex Light' -ErrorAction SilentlyContinue | Where-Object { $$_.Path -and $$_.Path.StartsWith('$INSTDIR', [System.StringComparison]::CurrentCultureIgnoreCase) } | Stop-Process -Force"`
+  nsExec::ExecToLog `"$PowerShellPath" -NoProfile -ExecutionPolicy Bypass -Command "$$installDir = $$args[0]; Get-Process -Name 'Codex Light' -ErrorAction SilentlyContinue | Where-Object { $$_.Path -and $$_.Path.StartsWith($$installDir, [System.StringComparison]::CurrentCultureIgnoreCase) } | Stop-Process -Force" "$INSTDIR"`
   Pop $0
   ${If} $0 != 0
     nsExec::ExecToLog `"$CmdPath" /C taskkill /F /IM "Codex Light.exe" /T /FI "USERNAME eq %USERNAME%"`
