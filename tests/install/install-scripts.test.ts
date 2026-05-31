@@ -38,15 +38,22 @@ describe('installer scripts', () => {
     const installerInclude = read('scripts/nsis/installer.nsh');
 
     expect(packageJson.build?.nsis?.include).toBe('scripts/nsis/installer.nsh');
+    expect(installerInclude).toContain('!ifndef BUILD_UNINSTALLER');
     expect(installerInclude).toContain('!macro customCheckAppRunning');
     expect(installerInclude).toContain("Get-Process -Name 'Codex Light'");
+    expect(installerInclude).toContain("Where-Object { $$_.Path -and $$_.Path.StartsWith('$INSTDIR', [System.StringComparison]::CurrentCultureIgnoreCase) }");
     expect(installerInclude).toContain('Stop-Process -Force');
     expect(installerInclude).toContain('taskkill /F /IM "Codex Light.exe" /T');
+    expect(installerInclude).toContain('/FI "USERNAME eq %USERNAME%"');
     expect(installerInclude).toContain('!macro customPageAfterChangeDir');
     expect(installerInclude).toContain('Page custom StartOnLoginPageCreate StartOnLoginPageLeave');
     expect(installerInclude).toContain('Start Codex Light when I sign in');
+    expect(installerInclude).toContain('${If} ${FileExists} "$SMSTARTUP\\Codex Light.lnk"');
+    expect(installerInclude).toContain('${NSD_Check} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('${NSD_Uncheck} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('!macro customInstall');
+    expect(installerInclude).toContain('SetShellVarContext current');
+    expect(installerInclude).toContain('${ElseIf} $StartOnLoginState == ${BST_UNCHECKED}');
     expect(installerInclude).toContain('CreateShortCut "$SMSTARTUP\\Codex Light.lnk"');
     expect(installerInclude).toContain('!macro customUnInstall');
     expect(installerInclude).toContain('Delete "$SMSTARTUP\\Codex Light.lnk"');
