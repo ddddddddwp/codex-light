@@ -35,7 +35,9 @@ files.
 
 During install, the startup (开机启动) option is shown and defaults unchecked for
 a fresh install. On upgrade, an existing startup shortcut is preserved. Uninstall
-removes the startup shortcut.
+removes the startup shortcut. Silent upgrades preserve an existing startup
+shortcut unless a later interactive install explicitly leaves the startup option
+unchecked.
 
 ## Local Packaging
 

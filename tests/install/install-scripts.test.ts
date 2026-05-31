@@ -61,6 +61,7 @@ describe('installer scripts', () => {
     expect(installerInclude).toContain('${ElseIf} $StartOnLoginState == ${BST_UNCHECKED}');
     expect(installerInclude).toContain('CreateShortCut "$SMSTARTUP\\Codex Light.lnk"');
     expect(installerInclude).toContain('!macro customUnInstall');
+    expect(installerInclude).toContain('${IfNot} ${isUpdated}');
     expect(installerInclude).toContain('Delete "$SMSTARTUP\\Codex Light.lnk"');
   });
 

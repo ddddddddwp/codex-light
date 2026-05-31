@@ -81,7 +81,9 @@ FunctionEnd
 !endif
 
 !macro customUnInstall
-  !insertmacro useCurrentStartupShell
-  Delete "$SMSTARTUP\Codex Light.lnk"
-  !insertmacro restoreStartupShell
+  ${IfNot} ${isUpdated}
+    !insertmacro useCurrentStartupShell
+    Delete "$SMSTARTUP\Codex Light.lnk"
+    !insertmacro restoreStartupShell
+  ${EndIf}
 !macroend
