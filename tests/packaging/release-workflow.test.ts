@@ -24,6 +24,7 @@ describe('release workflow', () => {
     expect(workflow).toContain('npm test');
     expect(workflow).toContain('npm run lint');
     expect(workflow).toContain('npm run package:win');
+    expect(workflow).toContain('git add package.json package-lock.json');
     expect(workflow).toContain('git commit -m "chore(release): v$env:VERSION"');
     expect(workflow).toContain('git tag "v$env:VERSION"');
     expect(workflow).toContain('git push origin HEAD:main');
