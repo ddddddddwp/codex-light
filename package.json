@@ -2,6 +2,7 @@
   "name": "codex-light",
   "version": "0.1.0",
   "author": "Codex Light Contributors",
+  "license": "MIT",
   "private": true,
   "description": "Unofficial Win11 top-island status light for Codex CLI hooks and Codex Desktop fallback detection.",
   "type": "module",

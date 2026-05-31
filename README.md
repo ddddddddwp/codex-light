@@ -1,124 +1,136 @@
 # Codex Light
 
-Unofficial Win11 top-island status light for Codex CLI hooks and Codex Desktop fallback detection.
+[English](README.en.md)
 
-Codex Light places a compact, always-on-top island near the top of the Windows desktop and turns Codex activity into a visible status light.
+Codex Light 是一个非官方的 Win11 顶部小岛状态灯，用于显示 Codex CLI hooks 以及 Codex Desktop 进程兜底检测状态。
 
-## Status Mapping
+它会在 Windows 桌面顶部放置一个紧凑、置顶的状态岛，把 Codex 活动转换成可见的红绿灯状态。
 
-| Codex event | State | Light |
+## 状态映射
+
+| Codex 事件 | 状态 | 灯色 |
 | --- | --- | --- |
 | `SessionStart` | idle | red |
 | `UserPromptSubmit` | running | green |
 | `PreToolUse` | running | green |
+| 需要审批的 `PreToolUse` | waiting | yellow |
 | `PermissionRequest` | waiting | yellow |
 | `PostToolUse` | running | green |
-| `Stop` | completed | red |
+| `Stop` / `SessionEnd` / `SubagentStop` | completed | red |
 | `HookError` | error | red |
 
-The Codex CLI path is hook-based and precise. Codex Desktop fallback is process-based and can only indicate that a matching desktop process is present.
+Codex CLI 路径基于 hooks，状态更精确。Codex Desktop 兜底路径基于进程检测，只能表示匹配的桌面进程是否存在。
+当前 hook 安装器会注册 `SessionStart`、`UserPromptSubmit`、`PreToolUse`、`PermissionRequest`、`PostToolUse` 和 `Stop`；如果收到 `SessionEnd`、`SubagentStop` 或 `HookError`，状态归一化逻辑也能识别。
 
-## Requirements
+## 要求
 
-- Windows 11 for the desktop app.
-- Node.js 22+ for development and hook CLI execution.
-- Codex CLI configured in the environment where hooks are installed.
-- For WSL usage, Windows must expose the runtime directory through `/mnt/c/...`.
+- Windows 11，用于运行桌面应用。
+- Node.js 22+，用于开发和 hook CLI 执行。
+- Codex CLI 已在需要安装 hooks 的环境中配置好。
+- 如果从 WSL 使用，Windows runtime 目录需要能通过 `/mnt/c/...` 访问。
 
-## Build
+## 构建
 
 ```bash
 npm install
 npm run build
 ```
 
-Create an unpacked Windows build:
+创建未打包安装器的 Windows 目录构建：
 
 ```bash
 npm run package:win:dir
 ```
 
-The generated app is written to:
+生成的应用位于：
 
 ```text
 dist/win-unpacked/Codex Light.exe
 ```
 
-## Install On Win11
+## 在 Win11 上安装
 
-For normal desktop use, install with the generated setup executable:
+普通桌面使用建议安装生成的 setup 可执行文件：
 
 ```text
 dist/Codex-Light-Setup-0.1.0.exe
 ```
 
-The setup installer creates Desktop and Start Menu shortcuts and can launch Codex Light when installation finishes.
+setup 安装器会在替换文件前关闭已有 Codex Light 进程，创建桌面和开始菜单快捷方式，并可在安装完成后启动 Codex Light。
+安装器还会显示可选的开机启动选项。全新安装时默认不勾选；升级时会保留已有 Startup 快捷方式；卸载时会移除 Startup 快捷方式。
 
-Build the setup executable:
+构建 setup 可执行文件：
 
 ```bash
 npm run package:win
 ```
 
-If you are working from WSL/Linux and NSIS packaging needs Windows executable tooling, build the installer on Win11. For development installs, use the PowerShell script below.
+如果你在 WSL/Linux 中工作，而 NSIS 打包需要 Windows 可执行文件工具，请在 Win11 上构建安装器。开发安装可以使用下面的 PowerShell 脚本。
 
-## Developer Script Install On Win11
+## 从 GitHub Actions 发布
 
-From Windows PowerShell in this repository:
+维护者可以通过手动触发 GitHub Actions 的 `Release` workflow 发布 Windows 安装器。
+选择 `patch`、`minor` 或 `major` 后，workflow 会验证项目，在 `windows-latest` 上执行 `npm run package:win`，提交版本递增，创建 `vX.Y.Z` tag，并把 `Codex-Light-Setup-X.Y.Z.exe` 上传到 GitHub Release。
+
+发布检查清单和安装器行为细节见 [docs/release.md](docs/release.md)。
+
+## Win11 开发脚本安装
+
+在本仓库的 Windows PowerShell 中运行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1
 ```
 
-Useful switches:
+常用参数：
 
 ```powershell
-# Reuse an existing dist\win-unpacked build.
+# 复用已有 dist\win-unpacked 构建。
 powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -SkipBuild
 
-# Install and launch Codex Light automatically when Windows starts.
+# 安装后设置 Codex Light 随 Windows 启动。
 powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -StartOnLogin
 
-# Install without launching the app.
+# 安装后不启动应用。
 powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -NoLaunch
 ```
 
-The installer copies the app to:
+脚本会把应用复制到：
 
 ```text
 %LOCALAPPDATA%\Programs\CodexLight
 ```
 
-It also creates Desktop and Start Menu shortcuts.
+同时创建桌面和开始菜单快捷方式。
 
-## Run On Win11
+## 在 Win11 上运行
 
-Start the packaged app:
+启动打包后的应用：
 
 ```text
 Codex Light.exe
 ```
 
-Runtime state is stored under:
+runtime 状态保存在：
 
 ```text
 %LOCALAPPDATA%\CodexLight
 ```
 
-The key files are:
+关键文件：
 
-- `state.json` - current aggregated status.
-- `events.jsonl` - append-only hook event log.
+- `state.json` - 当前聚合状态。
+- `events.jsonl` - 追加写入的 hook 事件日志。
 
-## Connect Codex CLI From WSL Ubuntu
+## 从 WSL Ubuntu 连接 Codex CLI
 
-From the project directory inside WSL:
+在 WSL 中的项目目录运行：
 
 ```bash
 bash scripts/install-wsl-hooks.sh
 ```
 
-Useful switches:
+常用参数：
 
 ```bash
 bash scripts/install-wsl-hooks.sh --windows-user <WindowsUser>
@@ -126,7 +138,7 @@ bash scripts/install-wsl-hooks.sh --no-build
 bash scripts/install-wsl-hooks.sh --no-test-event
 ```
 
-Manual equivalent:
+等价的手动步骤：
 
 ```bash
 npm install
@@ -141,14 +153,14 @@ node "$HOOK_CLI" install-hooks \
   --hook-command "CODEX_LIGHT_HOME=\"$CODEX_LIGHT_HOME\" node \"$HOOK_CLI\" hook"
 ```
 
-Verify the connection:
+验证连接：
 
 ```bash
 CODEX_LIGHT_HOME="$CODEX_LIGHT_HOME" node "$HOOK_CLI" doctor \
   --hook-executable "$(command -v node)"
 ```
 
-Expected important fields:
+关键字段应为：
 
 ```json
 {
@@ -158,30 +170,30 @@ Expected important fields:
 }
 ```
 
-Manual event test:
+手动发送测试事件：
 
 ```bash
 printf '{"hook_event_name":"UserPromptSubmit","session_id":"test-1","cwd":"%s","model":"gpt-5.5"}' "$PWD" \
   | CODEX_LIGHT_HOME="$CODEX_LIGHT_HOME" node "$HOOK_CLI" hook
 ```
 
-The Win11 island should switch to green/running.
+Win11 顶部小岛应切换为绿色 running 状态。
 
-## Uninstall From Win11
+## 从 Win11 卸载
 
-From Windows PowerShell:
+在 Windows PowerShell 中运行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1
 ```
 
-Runtime state is preserved by default. To remove it too:
+runtime 状态默认保留。如需一并删除：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1 -RemoveRuntime
 ```
 
-## CLI Commands
+## CLI 命令
 
 ```bash
 node dist/hook-cli/index.js hook
@@ -189,7 +201,7 @@ node dist/hook-cli/index.js install-hooks
 node dist/hook-cli/index.js doctor
 ```
 
-## Development
+## 开发
 
 ```bash
 npm run lint
@@ -198,14 +210,18 @@ npm test
 npm run test:visual
 ```
 
-Run Electron in development mode:
+以开发模式运行 Electron：
 
 ```bash
 npm run dev:electron
 ```
 
-## Notes
+## 说明
 
-- This project is not affiliated with or endorsed by OpenAI.
-- The Windows desktop app uses file watching plus polling so status updates remain reliable when hooks write from WSL into the Windows filesystem.
-- Packaged renderer assets use relative paths so the app works correctly from `file://.../app.asar/...`.
+- 本项目与 OpenAI 无隶属关系，也不代表 OpenAI 官方认可。
+- Windows 桌面应用使用文件监听和轮询结合的方式，因此 hooks 从 WSL 写入 Windows 文件系统时，状态更新仍然可靠。
+- 打包后的 renderer 资源使用相对路径，因此应用可以从 `file://.../app.asar/...` 正常运行。
+
+## 许可证
+
+MIT。见 [LICENSE](LICENSE)。
