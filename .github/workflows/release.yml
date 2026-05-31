@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version increment
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish Windows installer
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --ff-only origin main
+
+      - name: Bump package version
+        run: |
+          npm version "${{ inputs.version }}" --no-git-tag-version
+          $version = node -p "require('./package.json').version"
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Ensure tag is new
+        run: |
+          if (git rev-parse "v$env:VERSION" 2>$null) {
+            Write-Error "Tag v$env:VERSION already exists."
+            exit 1
+          }
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build installer
+        run: npm run package:win
+
+      - name: Commit release version
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore(release): v$env:VERSION"
+          git tag "v$env:VERSION"
+
+      - name: Push release commit and tag
+        run: |
+          git push origin HEAD:main
+          git push origin "v$env:VERSION"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v$env:VERSION" `
+            "dist/Codex-Light-Setup-$env:VERSION.exe" `
+            --title "Codex Light v$env:VERSION" `
+            --notes "Codex Light v$env:VERSION"
