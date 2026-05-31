@@ -1,5 +1,41 @@
 # Codex Light Win11 Setup
 
+## Script Install
+
+From Windows PowerShell in this repository:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1
+```
+
+The installer:
+
+- builds the unpacked Windows app unless `-SkipBuild` is passed,
+- installs the app under `%LOCALAPPDATA%\Programs\CodexLight`,
+- creates Desktop and Start Menu shortcuts,
+- creates `%LOCALAPPDATA%\CodexLight`,
+- launches `Codex Light.exe` unless `-NoLaunch` is passed.
+
+Useful switches:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -SkipBuild
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -StartOnLogin
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -NoLaunch
+```
+
+## Uninstall
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1
+```
+
+Runtime files are preserved by default. Remove them too with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1 -RemoveRuntime
+```
+
 ## Development
 
 ```bash

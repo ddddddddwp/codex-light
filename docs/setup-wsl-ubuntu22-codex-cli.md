@@ -2,6 +2,34 @@
 
 Use this when Codex CLI runs inside Ubuntu 22 on WSL and Codex Light runs on Win11.
 
+## Script Install
+
+From this repository inside WSL:
+
+```bash
+bash scripts/install-wsl-hooks.sh
+```
+
+The script:
+
+- detects the Windows username with `powershell.exe`,
+- creates `/mnt/c/Users/<WindowsUser>/AppData/Local/CodexLight`,
+- builds `dist/hook-cli/index.js` unless `--no-build` is passed,
+- installs Codex CLI hooks into `~/.codex/hooks.json`,
+- runs `doctor`,
+- writes a manual `UserPromptSubmit` test event unless `--no-test-event` is passed.
+
+Useful switches:
+
+```bash
+bash scripts/install-wsl-hooks.sh --windows-user <WindowsUser>
+bash scripts/install-wsl-hooks.sh --runtime-dir /mnt/c/Users/<WindowsUser>/AppData/Local/CodexLight
+bash scripts/install-wsl-hooks.sh --no-build
+bash scripts/install-wsl-hooks.sh --no-test-event
+```
+
+The manual steps below are equivalent to what the script does.
+
 ## 1. Build Codex Light
 
 From this repository:

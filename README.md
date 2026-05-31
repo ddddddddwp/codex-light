@@ -44,6 +44,35 @@ The generated app is written to:
 dist/win-unpacked/Codex Light.exe
 ```
 
+## Install On Win11
+
+From Windows PowerShell in this repository:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1
+```
+
+Useful switches:
+
+```powershell
+# Reuse an existing dist\win-unpacked build.
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -SkipBuild
+
+# Install and launch Codex Light automatically when Windows starts.
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -StartOnLogin
+
+# Install without launching the app.
+powershell -ExecutionPolicy Bypass -File scripts\install-win11.ps1 -NoLaunch
+```
+
+The installer copies the app to:
+
+```text
+%LOCALAPPDATA%\Programs\CodexLight
+```
+
+It also creates Desktop and Start Menu shortcuts.
+
 ## Run On Win11
 
 Start the packaged app:
@@ -66,6 +95,20 @@ The key files are:
 ## Connect Codex CLI From WSL Ubuntu
 
 From the project directory inside WSL:
+
+```bash
+bash scripts/install-wsl-hooks.sh
+```
+
+Useful switches:
+
+```bash
+bash scripts/install-wsl-hooks.sh --windows-user <WindowsUser>
+bash scripts/install-wsl-hooks.sh --no-build
+bash scripts/install-wsl-hooks.sh --no-test-event
+```
+
+Manual equivalent:
 
 ```bash
 npm install
@@ -105,6 +148,20 @@ printf '{"hook_event_name":"UserPromptSubmit","session_id":"test-1","cwd":"%s","
 ```
 
 The Win11 island should switch to green/running.
+
+## Uninstall From Win11
+
+From Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1
+```
+
+Runtime state is preserved by default. To remove it too:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-win11.ps1 -RemoveRuntime
+```
 
 ## CLI Commands
 
