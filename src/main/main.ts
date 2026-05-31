@@ -15,16 +15,18 @@ import { computeOverlayBounds, selectOverlayDisplay, type DisplayLike, type Over
 import {
   DEFAULT_OVERLAY_SETTINGS,
   loadOverlaySettings,
-  normalizeOverlaySettings,
   saveOverlaySettings,
   type OverlaySettings
 } from './overlay-settings';
+import { commitOverlaySettingsUpdate, syncStartupState } from './settings-update';
 import { createSnapshotSync } from './snapshot-sync';
+import { readStartupEnabled, setStartupEnabled } from './startup';
 
 let overlay: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let overlaySettings: OverlaySettings = { ...DEFAULT_OVERLAY_SETTINGS };
+let settingsUpdateQueue: Promise<void> = Promise.resolve();
 let isPinnedExpanded = false;
 
 async function createOverlay(): Promise<void> {
@@ -237,12 +239,28 @@ ipcMain.on('set-pinned-expanded', (_event, value: boolean) => {
 ipcMain.handle('settings:get', () => getSettingsState());
 
 ipcMain.handle('settings:update', async (_event, patch: Partial<OverlaySettings>) => {
-  const nextSettings = normalizeOverlaySettings({ ...overlaySettings, ...patch });
-  await saveOverlaySettings(app.getPath('userData'), nextSettings);
-  overlaySettings = nextSettings;
-  applyOverlayBounds();
-  publishSettingsChanged();
-  return getSettingsState();
+  const update = async () => {
+    await commitOverlaySettingsUpdate({
+      previousSettings: overlaySettings,
+      patch,
+      saveSettings: (settings) => saveOverlaySettings(app.getPath('userData'), settings),
+      setStartupEnabled: (enabled) => setStartupEnabled(app, enabled),
+      commit: (nextSettings) => {
+        overlaySettings = nextSettings;
+        applyOverlayBounds();
+      },
+      publish: publishSettingsChanged
+    });
+    return getSettingsState();
+  };
+
+  const result = settingsUpdateQueue.then(update, update);
+  settingsUpdateQueue = result.then(
+    () => undefined,
+    () => undefined
+  );
+
+  return result;
 });
 
 app.whenReady().then(async () => {
@@ -252,6 +270,7 @@ app.whenReady().then(async () => {
     console.error('Failed to load overlay settings; using defaults:', error);
     overlaySettings = { ...DEFAULT_OVERLAY_SETTINGS };
   }
+  overlaySettings = syncStartupState(overlaySettings, () => readStartupEnabled(app));
 
   await createOverlay();
   createTray();

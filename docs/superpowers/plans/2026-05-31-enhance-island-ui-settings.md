@@ -36,7 +36,7 @@ base-ref: 7eada42dff432ede77bebcf364c95cc24a68b41f
 - Read: `openspec/changes/enhance-island-ui-settings/tasks.md`
 - Read: active stability change artifacts, if any exist when implementation starts
 
-- [ ] **Step 0.1: Confirm the prerequisite status-stability work is done**
+- [x] **Step 0.1: Confirm the prerequisite status-stability work is done**
 
 Check active changes and current branch state:
 
@@ -47,7 +47,7 @@ git status -sb
 
 Expected: no conflicting active implementation for status accuracy, or the status work has been explicitly completed/approved before UI implementation begins.
 
-- [ ] **Step 0.2: Run baseline validation**
+- [x] **Step 0.2: Run baseline validation**
 
 Run:
 
@@ -341,7 +341,7 @@ Expected: PASS.
 - Modify: `src/main/main.ts`
 - Create: `tests/renderer/SettingsApp.test.tsx`
 
-- [ ] **Step 5.1: Write failing settings UI tests**
+- [x] **Step 5.1: Write failing settings UI tests**
 
 Assert the settings UI calls the exposed API and renders controls:
 
@@ -361,15 +361,15 @@ npm test -- tests/renderer/SettingsApp.test.tsx
 
 Expected: FAIL because the component does not exist.
 
-- [ ] **Step 5.2: Route settings window rendering**
+- [x] **Step 5.2: Route settings window rendering**
 
 In `src/renderer/main.tsx`, render `SettingsApp` when `new URLSearchParams(window.location.search).get('view') === 'settings'`; otherwise render `App`.
 
-- [ ] **Step 5.3: Create settings BrowserWindow**
+- [x] **Step 5.3: Create settings BrowserWindow**
 
 In `src/main/main.ts`, add `createOrShowSettingsWindow()` that loads the same renderer URL/file with `?view=settings`, uses a normal framed window, and keeps hook ingestion running.
 
-- [ ] **Step 5.4: Implement settings controls**
+- [x] **Step 5.4: Implement settings controls**
 
 Controls:
 
@@ -379,7 +379,7 @@ Controls:
 - size slider clamped to the settings range;
 - startup checkbox bound to settings/startup state.
 
-- [ ] **Step 5.5: Verify settings UI tests pass**
+- [x] **Step 5.5: Verify settings UI tests pass**
 
 Run:
 
@@ -396,7 +396,7 @@ Expected: PASS.
 - Create: `tests/main/startup.test.ts`
 - Modify: `src/main/main.ts`
 
-- [ ] **Step 6.1: Write failing startup adapter tests**
+- [x] **Step 6.1: Write failing startup adapter tests**
 
 Use an injectable adapter shape:
 
@@ -423,7 +423,7 @@ npm test -- tests/main/startup.test.ts
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 6.2: Implement startup adapter**
+- [x] **Step 6.2: Implement startup adapter**
 
 Export:
 
@@ -434,11 +434,11 @@ export function setStartupEnabled(appLike: StartupAppLike, enabled: boolean): vo
 
 Guard unsupported/dev edge cases by returning a stable disabled state or throwing a controlled error that IPC converts into a settings diagnostic message.
 
-- [ ] **Step 6.3: Connect startup to settings updates**
+- [x] **Step 6.3: Connect startup to settings updates**
 
 When `updateSettings({ startOnLogin })` is invoked, call the startup adapter, persist the resulting setting, and publish `settings:changed`.
 
-- [ ] **Step 6.4: Verify startup tests pass**
+- [x] **Step 6.4: Verify startup tests pass**
 
 Run:
 
@@ -454,7 +454,7 @@ Expected: PASS.
 - Modify: `tests/visual/island.spec.ts`
 - Modify: `openspec/changes/enhance-island-ui-settings/tasks.md`
 
-- [ ] **Step 7.1: Update visual tests for compact behavior**
+- [x] **Step 7.1: Update visual tests for compact behavior**
 
 Current visual tests expect `.summary-text strong` to show state labels. Replace those assertions with compact expectations:
 
@@ -464,11 +464,11 @@ await expect(page.locator('.summary-text')).toContainText('codex-light');
 await expect(page.locator('.summary-text strong')).not.toHaveText('等待确认');
 ```
 
-- [ ] **Step 7.2: Add expanded visual check**
+- [x] **Step 7.2: Add expanded visual check**
 
 Trigger hover or load a test route/state that starts expanded, then assert action/model/cwd/elapsed metadata are visible.
 
-- [ ] **Step 7.3: Run full validation**
+- [x] **Step 7.3: Run full validation**
 
 Run:
 
@@ -481,11 +481,11 @@ npm run test:visual
 
 Expected: typecheck, Vitest, ESLint, and Playwright checks pass locally. If Playwright cannot run in the current environment, record the exact blocker and keep the unit/integration checks passing.
 
-- [ ] **Step 7.4: Update OpenSpec task checkboxes**
+- [x] **Step 7.4: Update OpenSpec task checkboxes**
 
 Mark completed items in `openspec/changes/enhance-island-ui-settings/tasks.md` only after the corresponding implementation and verification pass.
 
-- [ ] **Step 7.5: Commit implementation milestone**
+- [x] **Step 7.5: Commit implementation milestone**
 
 Use one semantic commit if the implementation stays cohesive:
 

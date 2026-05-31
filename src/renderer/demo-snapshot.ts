@@ -14,6 +14,7 @@ export function demoSnapshotFromLocation(location: Location): CodexLightSnapshot
         sessionId: `demo-${state}`,
         source: state === 'running' ? 'cli' : 'desktop-fallback',
         state,
+        cwd: 'C:\\code\\codex-light',
         projectName: 'codex-light',
         model: 'gpt-5.5',
         action: demoAction(state),
