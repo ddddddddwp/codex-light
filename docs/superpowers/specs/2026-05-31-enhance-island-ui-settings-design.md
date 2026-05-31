@@ -2,6 +2,8 @@
 astrolabe_change: enhance-island-ui-settings
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-05-31-enhance-island-ui-settings
+status: final
 ---
 
 # UI 表现增强技术设计

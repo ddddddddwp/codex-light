@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define how Codex hook events are ingested, normalized, aggregated, and shown as status data for the desktop island.
+
+## Requirements
 
 ### Requirement: Hook command records Codex lifecycle events
 

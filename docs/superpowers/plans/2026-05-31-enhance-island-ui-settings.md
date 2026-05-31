@@ -2,6 +2,7 @@
 change: enhance-island-ui-settings
 design-doc: docs/superpowers/specs/2026-05-31-enhance-island-ui-settings-design.md
 base-ref: 7eada42dff432ede77bebcf364c95cc24a68b41f
+archived-with: 2026-05-31-enhance-island-ui-settings
 ---
 
 # UI 表现增强 Implementation Plan
@@ -14,6 +15,7 @@ base-ref: 7eada42dff432ede77bebcf364c95cc24a68b41f
 
 **Tech Stack:** Electron BrowserWindow/screen/app APIs, React 19, TypeScript, Vitest, Testing Library, Playwright visual checks, existing `zod` dependency for validation.
 
+archived-with: 2026-05-31-enhance-island-ui-settings
 ---
 
 ## File Structure
