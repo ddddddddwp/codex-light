@@ -28,6 +28,11 @@ The system SHALL show distinct visual states for running, waiting, completed, er
 - **WHEN** the global display state is `waiting`
 - **THEN** the compact island shows a yellow status light and waiting label
 
+#### Scenario: Idle state is red
+
+- **WHEN** the global display state is `idle`
+- **THEN** the compact island shows a red status light and idle label
+
 #### Scenario: Completed or error state is red
 
 - **WHEN** the global display state is `completed` or `error`

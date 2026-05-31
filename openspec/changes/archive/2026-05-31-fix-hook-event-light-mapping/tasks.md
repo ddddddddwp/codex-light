@@ -1,0 +1,3 @@
+- [x] Add a regression test for the requested hook-event traffic-light table.
+- [x] Update hook normalization so permission-gated `PreToolUse` becomes waiting while the remaining table entries stay correct.
+- [x] Run focused and full verification for the mapping change.

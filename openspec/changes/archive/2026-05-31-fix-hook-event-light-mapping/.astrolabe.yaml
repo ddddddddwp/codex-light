@@ -1,0 +1,14 @@
+workflow: hotfix
+phase: archive
+build_mode: direct
+isolation: branch
+verify_mode: full
+base_ref: cd085be3342fdb9e79d453b784436c0c6d11a070
+design_doc: null
+plan: null
+verify_result: pass
+verification_report: docs/superpowers/reports/2026-05-31-fix-hook-event-light-mapping-verify.md
+branch_status: handled
+created_at: 2026-05-31
+verified_at: 2026-05-31
+archived: true

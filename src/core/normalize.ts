@@ -14,6 +14,28 @@ const PRIORITY: Record<CodexLightState, number> = {
   idle: 1
 };
 
+const APPROVAL_FLAG_FIELDS = [
+  'requires_permission',
+  'requires_approval',
+  'permission_required',
+  'approval_required',
+  'needs_permission',
+  'needs_approval'
+] as const;
+
+const PERMISSION_GATED_TOOLS = new Set([
+  'applypatch',
+  'bash',
+  'edit',
+  'execcommand',
+  'functionsexeccommand',
+  'multi_edit',
+  'multiedit',
+  'notebookedit',
+  'shell',
+  'write'
+]);
+
 export function normalizeHookPayload(input: unknown, now = new Date()): CodexLightEvent {
   if (!isRecord(input)) {
     throw new Error('Hook payload must be a JSON object.');
@@ -25,7 +47,7 @@ export function normalizeHookPayload(input: unknown, now = new Date()): CodexLig
   const cwd = typeof payload.cwd === 'string' ? payload.cwd : undefined;
   const model = typeof payload.model === 'string' ? payload.model : undefined;
   const turnId = typeof payload.turn_id === 'string' ? payload.turn_id : undefined;
-  const state = stateForHook(hookEventName);
+  const state = stateForHook(hookEventName, payload);
   const timestamp = now.toISOString();
 
   return {
@@ -114,9 +136,10 @@ function chooseEffectiveEvent(events: CodexLightEvent[]): CodexLightEvent {
   ), events[0]);
 }
 
-function stateForHook(hookEventName: string): CodexLightState {
+function stateForHook(hookEventName: string, payload: RawCodexHookPayload): CodexLightState {
   if (hookEventName === 'SessionStart') return 'idle';
   if (hookEventName === 'PermissionRequest') return 'waiting';
+  if (hookEventName === 'PreToolUse' && isPermissionGatedTool(payload)) return 'waiting';
   if (hookEventName === 'Stop' || hookEventName === 'SessionEnd' || hookEventName === 'SubagentStop') {
     return 'completed';
   }
@@ -126,6 +149,9 @@ function stateForHook(hookEventName: string): CodexLightState {
 
 function actionForHook(hookEventName: string, payload: RawCodexHookPayload): string {
   if (hookEventName === 'PermissionRequest') {
+    return `Waiting for approval${payload.tool_name ? `: ${payload.tool_name}` : ''}`;
+  }
+  if (hookEventName === 'PreToolUse' && isPermissionGatedTool(payload)) {
     return `Waiting for approval${payload.tool_name ? `: ${payload.tool_name}` : ''}`;
   }
   if (hookEventName === 'PreToolUse') return `Running ${payload.tool_name ?? 'tool'}`;
@@ -138,6 +164,36 @@ function actionForHook(hookEventName: string, payload: RawCodexHookPayload): str
 
 function projectNameFromCwd(cwd: string): string {
   return cwd.includes('\\') ? path.win32.basename(cwd) : path.basename(cwd);
+}
+
+function isPermissionGatedTool(payload: RawCodexHookPayload): boolean {
+  const explicit = explicitApprovalRequired(payload);
+  if (explicit !== undefined) return explicit;
+
+  if (typeof payload.tool_name !== 'string') return false;
+  return PERMISSION_GATED_TOOLS.has(normalizeToolName(payload.tool_name));
+}
+
+function explicitApprovalRequired(payload: RawCodexHookPayload): boolean | undefined {
+  for (const field of APPROVAL_FLAG_FIELDS) {
+    const value = payload[field];
+    if (typeof value === 'boolean') return value;
+    if (typeof value !== 'string') continue;
+
+    const normalized = value.toLowerCase();
+    if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'required') {
+      return true;
+    }
+    if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'none') {
+      return false;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeToolName(toolName: string): string {
+  return toolName.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function readString(value: unknown, field: string): string {

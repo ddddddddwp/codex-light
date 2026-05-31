@@ -18,17 +18,32 @@ The system SHALL provide a hook command that accepts one Codex hook JSON object 
 
 The system SHALL map Codex hook and fallback events into normalized session states suitable for UI display.
 
+#### Scenario: Session start becomes red idle
+
+- **WHEN** a `SessionStart` hook event is recorded for a session
+- **THEN** the normalized session state becomes `idle`
+
+#### Scenario: User prompt becomes green running
+
+- **WHEN** a `UserPromptSubmit` hook event is recorded for a session
+- **THEN** the normalized session state becomes `running`
+
+#### Scenario: Permission-gated tool start becomes yellow waiting
+
+- **WHEN** a permission-gated `PreToolUse` hook event is recorded for a session
+- **THEN** the normalized session state becomes `waiting`
+
+#### Scenario: Permission-gated tool completion becomes green running
+
+- **WHEN** a permission-gated `PostToolUse` hook event is recorded for a session
+- **THEN** the normalized session state becomes `running`
+
 #### Scenario: Permission request becomes waiting
 
 - **WHEN** a `PermissionRequest` hook event is recorded for a session
 - **THEN** the normalized session state becomes `waiting`
 
-#### Scenario: Tool or prompt activity becomes running
-
-- **WHEN** a `SessionStart`, `UserPromptSubmit`, `PreToolUse`, or `PostToolUse` hook event is recorded for a session
-- **THEN** the normalized session state becomes `running` unless a newer waiting event exists for the same active turn
-
-#### Scenario: Stop becomes completed
+#### Scenario: Stop becomes red completed
 
 - **WHEN** a `Stop` hook event is recorded for a session
 - **THEN** the normalized session state becomes `completed`

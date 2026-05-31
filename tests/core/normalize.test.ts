@@ -5,12 +5,60 @@ import stop from '../fixtures/stop.json';
 import { aggregateSessions, normalizeHookPayload } from '../../src/core/normalize';
 
 describe('normalizeHookPayload', () => {
-  it('maps SessionStart to idle so the island stays red until a prompt is submitted', () => {
-    const event = normalizeHookPayload(sessionStart);
+  it('maps Codex hook events to the requested traffic-light states', () => {
+    const cases = [
+      {
+        name: 'SessionStart',
+        payload: sessionStart,
+        state: 'idle',
+        action: 'Session started'
+      },
+      {
+        name: 'UserPromptSubmit',
+        payload: {
+          ...sessionStart,
+          hook_event_name: 'UserPromptSubmit',
+          turn_id: 'turn-1'
+        },
+        state: 'running',
+        action: 'Prompt submitted'
+      },
+      {
+        name: 'PreToolUse for a permission-gated tool',
+        payload: {
+          ...sessionStart,
+          hook_event_name: 'PreToolUse',
+          turn_id: 'turn-1',
+          tool_name: 'Bash'
+        },
+        state: 'waiting',
+        action: 'Waiting for approval: Bash'
+      },
+      {
+        name: 'PostToolUse for a permission-gated tool',
+        payload: {
+          ...sessionStart,
+          hook_event_name: 'PostToolUse',
+          turn_id: 'turn-1',
+          tool_name: 'Bash'
+        },
+        state: 'running',
+        action: 'Finished Bash'
+      },
+      {
+        name: 'Stop',
+        payload: stop,
+        state: 'completed',
+        action: 'Turn completed'
+      }
+    ] as const;
 
-    expect(event.state).toBe('idle');
-    expect(event.sessionId).toBe('session-1');
-    expect(event.source).toBe('cli');
+    for (const { name, payload, state, action } of cases) {
+      const event = normalizeHookPayload(payload);
+
+      expect(event.state, name).toBe(state);
+      expect(event.action, name).toBe(action);
+    }
   });
 
   it('maps PermissionRequest to waiting', () => {
