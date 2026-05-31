@@ -1,6 +1,22 @@
 # Codex Light Win11 Setup
 
-## Script Install
+## Setup Installer
+
+For normal desktop use, install Codex Light with the generated setup executable:
+
+```text
+dist/Codex-Light-Setup-0.1.0.exe
+```
+
+Build it with:
+
+```bash
+npm run package:win
+```
+
+The setup installer creates Desktop and Start Menu shortcuts and can launch Codex Light when installation finishes. If you are building from WSL/Linux and NSIS packaging needs Windows executable tooling, build this installer on Win11.
+
+## Developer Script Install
 
 From Windows PowerShell in this repository:
 

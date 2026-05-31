@@ -76,6 +76,7 @@
   "build": {
     "appId": "dev.codex-light.app",
     "productName": "Codex Light",
+    "artifactName": "Codex-Light-Setup-${version}.${ext}",
     "files": [
       "dist/**/*",
       "package.json"
@@ -83,6 +84,16 @@
     "win": {
       "target": "nsis",
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Codex Light",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     }
   }
 }

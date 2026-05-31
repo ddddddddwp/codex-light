@@ -6,6 +6,27 @@ function read(path: string): string {
 }
 
 describe('installer scripts', () => {
+  it('configures a formal NSIS setup executable for Win11 distribution', () => {
+    const packageJson = JSON.parse(read('package.json')) as {
+      build?: {
+        artifactName?: string;
+        win?: { target?: string; signAndEditExecutable?: boolean };
+        nsis?: Record<string, unknown>;
+      };
+    };
+
+    expect(packageJson.build?.artifactName).toBe('Codex-Light-Setup-${version}.${ext}');
+    expect(packageJson.build?.win?.target).toBe('nsis');
+    expect(packageJson.build?.win?.signAndEditExecutable).toBe(false);
+    expect(packageJson.build?.nsis).toMatchObject({
+      oneClick: false,
+      perMachine: false,
+      createDesktopShortcut: true,
+      createStartMenuShortcut: true,
+      runAfterFinish: true
+    });
+  });
+
   it('provides a Win11 installer that installs the app and shortcuts per user', () => {
     const script = read('scripts/install-win11.ps1');
 
