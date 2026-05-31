@@ -9,9 +9,10 @@ Maintainers choose one version input:
 - `minor`
 - `major`
 
-The workflow bumps `package.json` and `package-lock.json`, commits
-`chore(release): vX.Y.Z` to `main`, tags `vX.Y.Z`, builds the Windows installer
-with `npm run package:win`, and publishes a GitHub Release containing:
+The workflow bumps `package.json` and `package-lock.json`, validates the
+release, builds the Windows installer with `npm run package:win`, verifies the
+installer asset exists, then commits `chore(release): vX.Y.Z` to `main`, tags
+`vX.Y.Z`, and publishes a GitHub Release containing:
 
 ```text
 dist/Codex-Light-Setup-X.Y.Z.exe
@@ -44,4 +45,4 @@ workflow runs on GitHub's `windows-latest` runner.
 ## Automatic Updates
 
 Automatic updates (自动更新, auto updates) are intentionally deferred. Releases are
-currently distributed through manually published GitHub Release installer assets.
+currently distributed through manually triggered GitHub Release installer assets.
