@@ -27,4 +27,19 @@ describe('handleHookInput', () => {
 
     expect(exitCode).toBe(1);
   });
+
+  it('keeps concurrent hook writes best-effort successful', async () => {
+    const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'codex-light-cli-concurrent-'));
+    const exitCodes = await Promise.all(Array.from({ length: 20 }, (_, index) => handleHookInput(JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      session_id: 'session-cli',
+      cwd: 'C:\\code\\demo',
+      model: 'gpt-5.5',
+      tool_name: 'Bash',
+      turn_id: `turn-${index}`
+    }), runtimeDir)));
+
+    expect(exitCodes).toEqual(exitCodes.map(() => 0));
+    await expect(fs.readFile(path.join(runtimeDir, 'state.json'), 'utf8')).resolves.toContain('"version": 1');
+  });
 });

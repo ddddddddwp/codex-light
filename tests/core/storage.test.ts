@@ -28,4 +28,22 @@ describe('storage', () => {
     const snapshot = JSON.parse(await fs.readFile(path.join(dir, 'state.json'), 'utf8')) as { globalState: string };
     expect(snapshot.globalState).toBe('running');
   });
+
+  it('uses independent temporary files for concurrent snapshot writes', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'codex-light-concurrent-'));
+    const writes = Array.from({ length: 40 }, (_, index) => writeSnapshotAtomic(dir, {
+      version: 1,
+      generatedAt: `2026-05-31T00:00:${String(index).padStart(2, '0')}.000Z`,
+      globalState: index % 2 === 0 ? 'running' : 'waiting',
+      activeSessionCount: 1,
+      sessions: [],
+      diagnostics: []
+    }));
+
+    const results = await Promise.allSettled(writes);
+
+    expect(results).toEqual(results.map(() => expect.objectContaining({ status: 'fulfilled' })));
+    expect(await fs.readdir(dir)).not.toContain('state.json.tmp');
+    await expect(fs.readFile(path.join(dir, 'state.json'), 'utf8')).resolves.toContain('"version": 1');
+  });
 });
