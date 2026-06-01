@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 export type OverlayAlignment = 'top-center' | 'top-left' | 'top-right';
 export type OverlayTargetDisplayId = 'primary' | number;
+export type OverlayLanguage = 'zh-CN' | 'en-US';
 
 export interface OverlaySettings {
   version: 1;
@@ -11,6 +12,7 @@ export interface OverlaySettings {
   opacity: number;
   sizeScale: number;
   startOnLogin: boolean;
+  language: OverlayLanguage;
 }
 
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
@@ -19,11 +21,13 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
   targetDisplayId: 'primary',
   opacity: 0.96,
   sizeScale: 1,
-  startOnLogin: false
+  startOnLogin: false,
+  language: 'zh-CN'
 };
 
 const SETTINGS_FILE_NAME = 'overlay-settings.json';
 const ALIGNMENTS: readonly OverlayAlignment[] = ['top-center', 'top-left', 'top-right'];
+const LANGUAGES: readonly OverlayLanguage[] = ['zh-CN', 'en-US'];
 
 function settingsPath(userDataDir: string): string {
   return join(userDataDir, SETTINGS_FILE_NAME);
@@ -65,6 +69,9 @@ export function normalizeOverlaySettings(value: unknown): OverlaySettings {
   const alignment = ALIGNMENTS.includes(persisted.alignment as OverlayAlignment)
     ? persisted.alignment as OverlayAlignment
     : DEFAULT_OVERLAY_SETTINGS.alignment;
+  const language = LANGUAGES.includes(persisted.language as OverlayLanguage)
+    ? persisted.language as OverlayLanguage
+    : DEFAULT_OVERLAY_SETTINGS.language;
 
   return {
     version: 1,
@@ -74,7 +81,8 @@ export function normalizeOverlaySettings(value: unknown): OverlaySettings {
     sizeScale: clamp(numberOrDefault(persisted.sizeScale, DEFAULT_OVERLAY_SETTINGS.sizeScale), 0.85, 1.25),
     startOnLogin: typeof persisted.startOnLogin === 'boolean'
       ? persisted.startOnLogin
-      : DEFAULT_OVERLAY_SETTINGS.startOnLogin
+      : DEFAULT_OVERLAY_SETTINGS.startOnLogin,
+    language
   };
 }
 

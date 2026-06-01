@@ -1,0 +1,14 @@
+workflow: hotfix
+phase: verify
+build_mode: direct
+isolation: branch
+verify_mode: light
+base_ref: 1e3ec485cd2e48a8288cc55a057ab78a5fcd7c2f
+design_doc: null
+plan: null
+verify_result: pending
+verification_report: docs/superpowers/reports/2026-06-01-fix-overlay-clipping-transparency-verify.md
+branch_status: pending
+created_at: 2026-06-01
+verified_at: null
+archived: false

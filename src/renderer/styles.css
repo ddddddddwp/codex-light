@@ -14,26 +14,45 @@ body,
 }
 
 .island {
+  --island-scale: 1;
+  --island-width: 260px;
+  --island-min-height: 52px;
+  --island-radius: 999px;
+  position: relative;
+  width: calc(var(--island-width) * var(--island-scale));
+  min-height: calc(var(--island-min-height) * var(--island-scale));
   margin: 8px auto 0;
   color: #fff;
-  background: rgba(12, 16, 23, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
-  transition: width 180ms ease, min-height 180ms ease, border-radius 180ms ease;
+  transition: width 180ms ease, min-height 180ms ease;
   user-select: none;
 }
 
+.island-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--island-width);
+  min-height: var(--island-min-height);
+  background: rgba(12, 16, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  backdrop-filter: blur(18px);
+  border-radius: var(--island-radius);
+  transform: scale(var(--island-scale));
+  transform-origin: top left;
+  transition: border-radius 180ms ease;
+}
+
 .compact {
-  width: 260px;
-  min-height: 52px;
-  border-radius: 999px;
+  --island-width: 260px;
+  --island-min-height: 52px;
+  --island-radius: 999px;
 }
 
 .expanded {
-  width: 540px;
-  min-height: 112px;
-  border-radius: 24px;
+  --island-width: 540px;
+  --island-min-height: 112px;
+  --island-radius: 24px;
 }
 
 .summary {

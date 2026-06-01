@@ -16,6 +16,7 @@ import {
   DEFAULT_OVERLAY_SETTINGS,
   loadOverlaySettings,
   saveOverlaySettings,
+  type OverlayLanguage,
   type OverlaySettings
 } from './overlay-settings';
 import { commitOverlaySettingsUpdate, syncStartupState } from './settings-update';
@@ -83,12 +84,13 @@ function getDisplayLikes(): DisplayLike[] {
 
 function getSettingsState(): CodexLightSettingsState {
   const primaryId = screen.getPrimaryDisplay().id;
+  const copy = mainCopy(overlaySettings.language);
 
   return {
     settings: { ...overlaySettings },
     displays: screen.getAllDisplays().map((display, index): OverlayDisplayInfo => ({
       id: display.id,
-      label: display.label || `Display ${index + 1}`,
+      label: display.label || copy.display(index),
       bounds: {
         x: display.bounds.x,
         y: display.bounds.y,
@@ -106,6 +108,35 @@ function publishSettingsChanged(): void {
   settingsWindow?.webContents.send('settings:changed', state);
 }
 
+function mainCopy(language: OverlayLanguage): {
+  settings: string;
+  showIsland: string;
+  hideIsland: string;
+  quit: string;
+  display: (index: number) => string;
+  settingsTitle: string;
+} {
+  if (language === 'en-US') {
+    return {
+      settings: 'Settings',
+      showIsland: 'Show Island',
+      hideIsland: 'Hide Island',
+      quit: 'Quit',
+      display: (index) => `Display ${index + 1}`,
+      settingsTitle: 'Codex Light Settings'
+    };
+  }
+
+  return {
+    settings: '设置',
+    showIsland: '显示红绿灯',
+    hideIsland: '隐藏红绿灯',
+    quit: '退出',
+    display: (index) => `显示器 ${index + 1}`,
+    settingsTitle: 'Codex Light 设置'
+  };
+}
+
 function handleDisplayChange(): void {
   applyOverlayBounds();
   publishSettingsChanged();
@@ -114,20 +145,28 @@ function handleDisplayChange(): void {
 function createTray(): void {
   tray = new Tray(createTrayImage());
   tray.setToolTip('Codex Light');
+  updateTrayMenu();
+}
+
+function updateTrayMenu(): void {
+  if (!tray) return;
+
+  const copy = mainCopy(overlaySettings.language);
   tray.setContextMenu(Menu.buildFromTemplate([
     {
-      label: 'Settings',
+      label: copy.settings,
       click: () => {
         createOrShowSettingsWindow().catch((error: unknown) => {
           console.error('Failed to open settings window:', error);
         });
       }
     },
-    { label: 'Show Island', click: () => overlay?.showInactive() },
-    { label: 'Hide Island', click: () => overlay?.hide() },
+    { label: copy.showIsland, click: () => overlay?.showInactive() },
+    { label: copy.hideIsland, click: () => overlay?.hide() },
     { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
+    { label: copy.quit, click: () => app.quit() }
   ]));
+  settingsWindow?.setTitle(copy.settingsTitle);
 }
 
 async function createOrShowSettingsWindow(): Promise<void> {
@@ -140,6 +179,7 @@ async function createOrShowSettingsWindow(): Promise<void> {
   const window = new BrowserWindow({
     width: 760,
     height: 560,
+    title: mainCopy(overlaySettings.language).settingsTitle,
     frame: true,
     resizable: true,
     show: false,
@@ -231,7 +271,7 @@ function createTrayImage(): Electron.NativeImage {
   return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${svg}`);
 }
 
-ipcMain.on('set-pinned-expanded', (_event, value: boolean) => {
+ipcMain.handle('set-pinned-expanded', (_event, value: boolean) => {
   isPinnedExpanded = value;
   applyOverlayBounds();
 });
@@ -248,6 +288,7 @@ ipcMain.handle('settings:update', async (_event, patch: Partial<OverlaySettings>
       commit: (nextSettings) => {
         overlaySettings = nextSettings;
         applyOverlayBounds();
+        updateTrayMenu();
       },
       publish: publishSettingsChanged
     });
