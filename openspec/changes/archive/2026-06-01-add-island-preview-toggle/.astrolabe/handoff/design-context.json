@@ -1,0 +1,14 @@
+{
+  "change": "add-island-preview-toggle",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "ast-handoff.sh",
+  "context_hash": "fb2573fc70320c8066b785b649e8cdf35d5da5562c790301da20f35aa599e845",
+  "files": [
+    { "path": "openspec/changes/add-island-preview-toggle/proposal.md", "sha256": "4cc05a0a36483289a6623826d1236158d9a369c104cdc11a38d69a5dd2333811" },
+    { "path": "openspec/changes/add-island-preview-toggle/design.md", "sha256": "4ac1ac4e5f9550ad7bf64b3a3645a36606e94f065243212296ee6a29c25201ed" },
+    { "path": "openspec/changes/add-island-preview-toggle/tasks.md", "sha256": "1af0166fe4e82cf0451365cb46e83bc4cac7c7366a9158314de3a061cbd0e4bb" },
+    { "path": "openspec/changes/add-island-preview-toggle/specs/top-island-overlay/spec.md", "sha256": "6a2a7f379f97f6c894efd4e8e57ee23da1da4ddee0bbe4f384eced7088eac15a" }
+  ]
+}

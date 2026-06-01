@@ -12,6 +12,7 @@ export interface OverlaySettings {
   opacity: number;
   sizeScale: number;
   startOnLogin: boolean;
+  trafficLightPreviewEnabled: boolean;
   language: OverlayLanguage;
 }
 
@@ -22,6 +23,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
   opacity: 0.96,
   sizeScale: 1,
   startOnLogin: false,
+  trafficLightPreviewEnabled: true,
   language: 'zh-CN'
 };
 
@@ -82,6 +84,9 @@ export function normalizeOverlaySettings(value: unknown): OverlaySettings {
     startOnLogin: typeof persisted.startOnLogin === 'boolean'
       ? persisted.startOnLogin
       : DEFAULT_OVERLAY_SETTINGS.startOnLogin,
+    trafficLightPreviewEnabled: typeof persisted.trafficLightPreviewEnabled === 'boolean'
+      ? persisted.trafficLightPreviewEnabled
+      : DEFAULT_OVERLAY_SETTINGS.trafficLightPreviewEnabled,
     language
   };
 }

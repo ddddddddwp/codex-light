@@ -16,6 +16,8 @@ const COPY: Record<OverlayLanguage, {
   opacity: string;
   size: string;
   startOnLogin: string;
+  trafficLightPreview: string;
+  trafficLightPreviewLabel: string;
   alignments: Record<OverlayAlignment, string>;
 }> = {
   'zh-CN': {
@@ -31,6 +33,8 @@ const COPY: Record<OverlayLanguage, {
     opacity: '透明度',
     size: '尺寸',
     startOnLogin: '开机启动',
+    trafficLightPreview: '允许预览红绿灯',
+    trafficLightPreviewLabel: '红绿灯预览',
     alignments: {
       'top-center': '顶部居中',
       'top-left': '顶部左侧',
@@ -50,6 +54,8 @@ const COPY: Record<OverlayLanguage, {
     opacity: 'Opacity',
     size: 'Size',
     startOnLogin: 'Start at login',
+    trafficLightPreview: 'Allow traffic-light preview',
+    trafficLightPreviewLabel: 'Traffic-light preview',
     alignments: {
       'top-center': 'Top center',
       'top-left': 'Top left',
@@ -229,6 +235,26 @@ export function SettingsApp() {
           />
           <span>{copy.startOnLogin}</span>
         </label>
+
+        <label className="settings-checkbox">
+          <input
+            type="checkbox"
+            checked={state.settings.trafficLightPreviewEnabled}
+            onChange={(event) => {
+              updateSettings({ trafficLightPreviewEnabled: event.target.checked });
+            }}
+          />
+          <span>{copy.trafficLightPreview}</span>
+        </label>
+
+        {state.settings.trafficLightPreviewEnabled && (
+          <section className="settings-preview" aria-label={copy.trafficLightPreviewLabel}>
+            <div className="settings-preview-island">
+              <span className="settings-preview-dot" aria-hidden="true" />
+              <strong>codex-light</strong>
+            </div>
+          </section>
+        )}
       </form>
     </main>
   );
@@ -236,7 +262,13 @@ export function SettingsApp() {
 
 type SettingsPatch = Pick<
   Partial<OverlaySettings>,
-  'alignment' | 'targetDisplayId' | 'opacity' | 'sizeScale' | 'startOnLogin' | 'language'
+  | 'alignment'
+  | 'targetDisplayId'
+  | 'opacity'
+  | 'sizeScale'
+  | 'startOnLogin'
+  | 'trafficLightPreviewEnabled'
+  | 'language'
 >;
 
 function displayValueFromSelect(value: string): OverlayTargetDisplayId {

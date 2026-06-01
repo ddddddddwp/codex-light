@@ -1,6 +1,6 @@
 !include LogicLib.nsh
 
-Var StartupShellWasAllUsers
+!define STARTUP_SHORTCUT "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Codex Light.lnk"
 
 !ifndef BUILD_UNINSTALLER
 !include MUI2.nsh
@@ -9,21 +9,6 @@ Var StartupShellWasAllUsers
 Var StartOnLoginCheckbox
 Var StartOnLoginState
 !endif
-
-!macro useCurrentStartupShell
-  StrCpy $StartupShellWasAllUsers "0"
-  ${If} $installMode == "all"
-    StrCpy $StartupShellWasAllUsers "1"
-    SetShellVarContext current
-  ${EndIf}
-!macroend
-
-!macro restoreStartupShell
-  ${If} $StartupShellWasAllUsers == "1"
-    SetShellVarContext all
-    StrCpy $StartupShellWasAllUsers "0"
-  ${EndIf}
-!macroend
 
 !ifndef BUILD_UNINSTALLER
 !macro customCheckAppRunning
@@ -54,14 +39,11 @@ Function StartOnLoginPageCreate
   ${NSD_CreateCheckbox} 0 32u 100% 12u "Start Codex Light when I sign in"
   Pop $StartOnLoginCheckbox
 
-  !insertmacro useCurrentStartupShell
-  ${If} ${FileExists} "$SMSTARTUP\Codex Light.lnk"
+  ${If} ${FileExists} "${STARTUP_SHORTCUT}"
     ${NSD_Check} $StartOnLoginCheckbox
   ${Else}
     ${NSD_Uncheck} $StartOnLoginCheckbox
   ${EndIf}
-  !insertmacro restoreStartupShell
-
   nsDialogs::Show
 FunctionEnd
 
@@ -70,20 +52,17 @@ Function StartOnLoginPageLeave
 FunctionEnd
 
 !macro customInstall
-  !insertmacro useCurrentStartupShell
   ${If} $StartOnLoginState == ${BST_CHECKED}
-    CreateShortCut "$SMSTARTUP\Codex Light.lnk" "$appExe" "" "$appExe" 0 "" "" "${APP_DESCRIPTION}"
+    CreateDirectory "$APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+    CreateShortCut "${STARTUP_SHORTCUT}" "$appExe" "" "$appExe" 0 "" "" "${APP_DESCRIPTION}"
   ${ElseIf} $StartOnLoginState == ${BST_UNCHECKED}
-    Delete "$SMSTARTUP\Codex Light.lnk"
+    Delete "${STARTUP_SHORTCUT}"
   ${EndIf}
-  !insertmacro restoreStartupShell
 !macroend
 !endif
 
 !macro customUnInstall
   ${IfNot} ${isUpdated}
-    !insertmacro useCurrentStartupShell
-    Delete "$SMSTARTUP\Codex Light.lnk"
-    !insertmacro restoreStartupShell
+    Delete "${STARTUP_SHORTCUT}"
   ${EndIf}
 !macroend

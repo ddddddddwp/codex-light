@@ -1,0 +1,16 @@
+workflow: full
+phase: archive
+build_mode: subagent-driven-development
+isolation: worktree
+verify_mode: full
+base_ref: 4158df21f0d2e44043f3ffcb0df722f0f4ea05cb
+design_doc: docs/superpowers/specs/2026-06-01-island-preview-toggle-design.md
+plan: docs/superpowers/plans/2026-06-01-island-preview-toggle.md
+verify_result: pass
+verification_report: docs/superpowers/reports/2026-06-01-add-island-preview-toggle-verify.md
+branch_status: handled
+created_at: 2026-06-01
+verified_at: 2026-06-01
+archived: true
+handoff_context: openspec/changes/add-island-preview-toggle/.astrolabe/handoff/design-context.json
+handoff_hash: fb2573fc70320c8066b785b649e8cdf35d5da5562c790301da20f35aa599e845

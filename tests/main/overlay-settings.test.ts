@@ -18,6 +18,7 @@ describe('overlay settings', () => {
       opacity: 0.96,
       sizeScale: 1,
       startOnLogin: false,
+      trafficLightPreviewEnabled: true,
       language: 'zh-CN'
     });
   });
@@ -35,6 +36,18 @@ describe('overlay settings', () => {
     expect(normalizeOverlaySettings({ startOnLogin: 'yes' }).startOnLogin).toBe(false);
     expect(normalizeOverlaySettings({ language: 'fr-FR' }).language).toBe('zh-CN');
     expect(normalizeOverlaySettings({ language: 'en-US' }).language).toBe('en-US');
+  });
+
+  it('defaults traffic-light preview support to enabled', () => {
+    expect(normalizeOverlaySettings({}).trafficLightPreviewEnabled).toBe(true);
+  });
+
+  it('preserves disabled traffic-light preview support', () => {
+    expect(normalizeOverlaySettings({ trafficLightPreviewEnabled: false }).trafficLightPreviewEnabled).toBe(false);
+  });
+
+  it('falls back to enabled for invalid traffic-light preview values', () => {
+    expect(normalizeOverlaySettings({ trafficLightPreviewEnabled: 'no' }).trafficLightPreviewEnabled).toBe(true);
   });
 
   it('loads fresh defaults when the settings file is missing or contains bad JSON', async () => {
@@ -80,6 +93,7 @@ describe('overlay settings', () => {
         opacity: 0.8,
         sizeScale: 1.1,
         startOnLogin: true,
+        trafficLightPreviewEnabled: false,
         language: 'en-US'
       });
 
@@ -92,6 +106,7 @@ describe('overlay settings', () => {
         opacity: 0.8,
         sizeScale: 1.1,
         startOnLogin: true,
+        trafficLightPreviewEnabled: false,
         language: 'en-US'
       }, null, 2)}\n`);
       await expect(loadOverlaySettings(userDataDir)).resolves.toEqual({
@@ -101,6 +116,7 @@ describe('overlay settings', () => {
         opacity: 0.8,
         sizeScale: 1.1,
         startOnLogin: true,
+        trafficLightPreviewEnabled: false,
         language: 'en-US'
       });
     } finally {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { CodexLightSnapshot, CodexSession } from '../core/types';
-import type { OverlayLanguage } from '../main/overlay-settings';
+import type { OverlayLanguage, OverlaySettings } from '../main/overlay-settings';
 import './styles.css';
 
 const EMPTY: CodexLightSnapshot = {
@@ -81,6 +81,7 @@ export function App({ initialSnapshot = EMPTY, initialExpanded = false, initialN
   const [now, setNow] = useState(() => initialNow ?? new Date());
   const [language, setLanguage] = useState<OverlayLanguage>('zh-CN');
   const [sizeScale, setSizeScale] = useState(1);
+  const [trafficLightPreviewEnabled, setTrafficLightPreviewEnabled] = useState(true);
   const expansionRequestId = useRef(0);
   const primary = snapshot.sessions[0];
   const copy = COPY[language];
@@ -95,18 +96,28 @@ export function App({ initialSnapshot = EMPTY, initialExpanded = false, initialN
     if (!window.codexLight) return undefined;
 
     let mounted = true;
+    const applyOverlaySettings = (settings: OverlaySettings) => {
+      setLanguage(settings.language);
+      setSizeScale(settings.sizeScale);
+      setTrafficLightPreviewEnabled(settings.trafficLightPreviewEnabled !== false);
+
+      if (settings.trafficLightPreviewEnabled === false) {
+        expansionRequestId.current += 1;
+        setExpanded(false);
+        void window.codexLight?.setPinnedExpanded(false).catch(() => undefined);
+      }
+    };
+
     window.codexLight.getSettings()
       .then((state) => {
         if (mounted) {
-          setLanguage(state.settings.language);
-          setSizeScale(state.settings.sizeScale);
+          applyOverlaySettings(state.settings);
         }
       })
       .catch(() => undefined);
 
     const cleanup = window.codexLight.onSettingsChanged((state) => {
-      setLanguage(state.settings.language);
-      setSizeScale(state.settings.sizeScale);
+      applyOverlaySettings(state.settings);
     });
 
     return () => {
@@ -132,6 +143,8 @@ export function App({ initialSnapshot = EMPTY, initialExpanded = false, initialN
   }, [copy.idle, primary]);
 
   const expandIsland = () => {
+    if (!trafficLightPreviewEnabled) return;
+
     const requestId = ++expansionRequestId.current;
     setNow(new Date());
 

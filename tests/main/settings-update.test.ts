@@ -3,6 +3,7 @@ import { DEFAULT_OVERLAY_SETTINGS, type OverlaySettings } from '../../src/main/o
 import {
   applyOverlaySettingsUpdate,
   commitOverlaySettingsUpdate,
+  shouldApplyLiveOverlayEffectsForSettingsPatch,
   syncStartupState
 } from '../../src/main/settings-update';
 
@@ -91,6 +92,37 @@ describe('overlay settings update transaction', () => {
     expect(setStartupEnabled).not.toHaveBeenCalled();
   });
 
+  it('does not require live overlay effects for traffic-light preview-only updates', () => {
+    expect(shouldApplyLiveOverlayEffectsForSettingsPatch({
+      trafficLightPreviewEnabled: false
+    })).toBe(false);
+  });
+
+  it('keeps live overlay effects for traffic-light preview updates combined with live settings', () => {
+    expect(shouldApplyLiveOverlayEffectsForSettingsPatch({
+      trafficLightPreviewEnabled: false,
+      opacity: 0.9
+    })).toBe(true);
+  });
+
+  it('commits traffic-light preview-only updates with live overlay effects disabled', async () => {
+    const nextSettings = settings({ trafficLightPreviewEnabled: false });
+    const commit = vi.fn();
+    const publish = vi.fn();
+
+    await expect(commitOverlaySettingsUpdate({
+      previousSettings: settings({ trafficLightPreviewEnabled: true }),
+      patch: { trafficLightPreviewEnabled: false },
+      saveSettings: vi.fn<(_: OverlaySettings) => Promise<void>>().mockResolvedValue(undefined),
+      setStartupEnabled: vi.fn(),
+      commit,
+      publish
+    })).resolves.toEqual(nextSettings);
+
+    expect(commit).toHaveBeenCalledWith(nextSettings, { applyLiveOverlayEffects: false });
+    expect(publish).toHaveBeenCalledOnce();
+  });
+
   it('does not commit or publish when startup update fails', async () => {
     const error = new Error('startup unavailable');
     const commit = vi.fn();
@@ -125,7 +157,7 @@ describe('overlay settings update transaction', () => {
       publish
     })).resolves.toEqual(nextSettings);
 
-    expect(commit).toHaveBeenCalledWith(nextSettings);
+    expect(commit).toHaveBeenCalledWith(nextSettings, { applyLiveOverlayEffects: true });
     expect(publish).toHaveBeenCalledOnce();
   });
 });

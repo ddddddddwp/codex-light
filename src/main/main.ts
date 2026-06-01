@@ -22,6 +22,7 @@ import {
 import { commitOverlaySettingsUpdate, syncStartupState } from './settings-update';
 import { createSnapshotSync } from './snapshot-sync';
 import { readStartupEnabled, setStartupEnabled } from './startup';
+import { createTrayImage } from './tray-icon';
 
 let overlay: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -143,7 +144,7 @@ function handleDisplayChange(): void {
 }
 
 function createTray(): void {
-  tray = new Tray(createTrayImage());
+  tray = new Tray(createTrayImage(nativeImage));
   tray.setToolTip('Codex Light');
   updateTrayMenu();
 }
@@ -261,16 +262,6 @@ function getCliSessionStaleMs(env = process.env): number {
   return Number.isFinite(value) && value > 0 ? value : DEFAULT_CLI_SESSION_STALE_MS;
 }
 
-function createTrayImage(): Electron.NativeImage {
-  const svg = encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-      <rect width="32" height="32" rx="10" fill="#0d1117"/>
-      <circle cx="16" cy="16" r="7" fill="#31d27c"/>
-    </svg>
-  `);
-  return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${svg}`);
-}
-
 ipcMain.handle('set-pinned-expanded', (_event, value: boolean) => {
   isPinnedExpanded = value;
   applyOverlayBounds();
@@ -285,10 +276,12 @@ ipcMain.handle('settings:update', async (_event, patch: Partial<OverlaySettings>
       patch,
       saveSettings: (settings) => saveOverlaySettings(app.getPath('userData'), settings),
       setStartupEnabled: (enabled) => setStartupEnabled(app, enabled),
-      commit: (nextSettings) => {
+      commit: (nextSettings, effects) => {
         overlaySettings = nextSettings;
-        applyOverlayBounds();
-        updateTrayMenu();
+        if (effects.applyLiveOverlayEffects) {
+          applyOverlayBounds();
+          updateTrayMenu();
+        }
       },
       publish: publishSettingsChanged
     });

@@ -74,6 +74,75 @@ describe('App', () => {
     expect(await screen.findByText('Waiting for approval: Bash')).toBeInTheDocument();
   });
 
+  it('keeps the island compact on hover and click when traffic-light preview is disabled', async () => {
+    const setPinnedExpanded = vi.fn(async () => undefined);
+    installApi({
+      setPinnedExpanded,
+      getSettings: vi.fn(async () => ({
+        settings: {
+          version: 1,
+          alignment: 'top-center',
+          targetDisplayId: 'primary',
+          opacity: 0.96,
+          sizeScale: 1,
+          startOnLogin: false,
+          trafficLightPreviewEnabled: false,
+          language: 'zh-CN'
+        },
+        displays: []
+      }))
+    });
+
+    render(<App initialSnapshot={snapshot} initialExpanded={false} />);
+
+    await waitFor(() => {
+      expect(window.codexLight?.getSettings).toHaveBeenCalledOnce();
+    });
+
+    fireEvent.mouseEnter(screen.getByRole('main'));
+    fireEvent.click(screen.getByRole('main'));
+
+    expect(setPinnedExpanded).not.toHaveBeenCalledWith(true);
+    expect(screen.queryByText('Waiting for approval: Bash')).not.toBeInTheDocument();
+  });
+
+  it('collapses an expanded island when traffic-light preview is disabled from settings', async () => {
+    let settingsChanged: ((state: Awaited<ReturnType<NonNullable<typeof window.codexLight>['getSettings']>>) => void) | undefined;
+    const setPinnedExpanded = vi.fn(async () => undefined);
+    installApi({
+      setPinnedExpanded,
+      onSettingsChanged: vi.fn((callback) => {
+        settingsChanged = callback;
+        return vi.fn();
+      })
+    });
+
+    render(<App initialSnapshot={snapshot} initialExpanded initialNow={new Date('2026-05-31T00:00:05.000Z')} />);
+
+    expect(screen.getByText('Waiting for approval: Bash')).toBeInTheDocument();
+
+    act(() => {
+      settingsChanged?.({
+        settings: {
+          version: 1,
+          alignment: 'top-center',
+          targetDisplayId: 'primary',
+          opacity: 0.96,
+          sizeScale: 1,
+          startOnLogin: false,
+          trafficLightPreviewEnabled: false,
+          language: 'zh-CN'
+        },
+        displays: []
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Waiting for approval: Bash')).not.toBeInTheDocument();
+    });
+    expect(setPinnedExpanded).toHaveBeenCalledWith(false);
+  });
+
   it('renders only the primary session in expanded preview while keeping the total count', () => {
     render(
       <App
@@ -273,6 +342,7 @@ describe('App', () => {
           opacity: 0.96,
           sizeScale: 1,
           startOnLogin: false,
+          trafficLightPreviewEnabled: true,
           language: 'en-US'
         },
         displays: []
@@ -305,6 +375,7 @@ describe('App', () => {
           opacity: 0.96,
           sizeScale: 0.85,
           startOnLogin: false,
+          trafficLightPreviewEnabled: true,
           language: 'zh-CN'
         },
         displays: []
@@ -342,6 +413,7 @@ function installApi(overrides: Partial<NonNullable<typeof window.codexLight>> = 
         opacity: 0.96,
         sizeScale: 1,
         startOnLogin: false,
+        trafficLightPreviewEnabled: true,
         language: 'zh-CN'
       },
       displays: []

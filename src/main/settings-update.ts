@@ -7,8 +7,12 @@ export interface ApplyOverlaySettingsUpdateOptions {
   setStartupEnabled(enabled: boolean): void;
 }
 
+export interface OverlaySettingsUpdateEffects {
+  applyLiveOverlayEffects: boolean;
+}
+
 export interface CommitOverlaySettingsUpdateOptions extends ApplyOverlaySettingsUpdateOptions {
-  commit(settings: OverlaySettings): void;
+  commit(settings: OverlaySettings, effects: OverlaySettingsUpdateEffects): void;
   publish(): void;
 }
 
@@ -51,13 +55,21 @@ export async function applyOverlaySettingsUpdate({
   return nextSettings;
 }
 
+export function shouldApplyLiveOverlayEffectsForSettingsPatch(patch: Partial<OverlaySettings>): boolean {
+  const keys = Object.keys(patch);
+
+  return keys.length !== 1 || keys[0] !== 'trafficLightPreviewEnabled';
+}
+
 export async function commitOverlaySettingsUpdate({
   commit,
   publish,
   ...options
 }: CommitOverlaySettingsUpdateOptions): Promise<OverlaySettings> {
   const nextSettings = await applyOverlaySettingsUpdate(options);
-  commit(nextSettings);
+  commit(nextSettings, {
+    applyLiveOverlayEffects: shouldApplyLiveOverlayEffectsForSettingsPatch(options.patch)
+  });
   publish();
   return nextSettings;
 }
