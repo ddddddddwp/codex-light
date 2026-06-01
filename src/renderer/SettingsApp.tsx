@@ -1,21 +1,73 @@
 import { useEffect, useState } from 'react';
 import type { CodexLightSettingsState, OverlayDisplayInfo } from '../main/ipc-types';
-import type { OverlayAlignment, OverlaySettings, OverlayTargetDisplayId } from '../main/overlay-settings';
+import type { OverlayAlignment, OverlayLanguage, OverlaySettings, OverlayTargetDisplayId } from '../main/overlay-settings';
 import './styles.css';
 
-const ALIGNMENT_LABELS: Record<OverlayAlignment, string> = {
-  'top-center': '顶部居中',
-  'top-left': '顶部左侧',
-  'top-right': '顶部右侧'
+const COPY: Record<OverlayLanguage, {
+  unavailable: string;
+  loading: string;
+  title: string;
+  saveError: string;
+  language: string;
+  position: string;
+  display: string;
+  primaryDisplay: string;
+  primarySuffix: string;
+  opacity: string;
+  size: string;
+  startOnLogin: string;
+  alignments: Record<OverlayAlignment, string>;
+}> = {
+  'zh-CN': {
+    unavailable: '设置暂不可用',
+    loading: '正在载入设置...',
+    title: 'Codex Light 设置',
+    saveError: '设置保存失败',
+    language: '语言',
+    position: '位置',
+    display: '显示器',
+    primaryDisplay: '主显示器',
+    primarySuffix: '（主）',
+    opacity: '透明度',
+    size: '尺寸',
+    startOnLogin: '开机启动',
+    alignments: {
+      'top-center': '顶部居中',
+      'top-left': '顶部左侧',
+      'top-right': '顶部右侧'
+    }
+  },
+  'en-US': {
+    unavailable: 'Settings unavailable',
+    loading: 'Loading settings...',
+    title: 'Codex Light Settings',
+    saveError: 'Failed to save settings',
+    language: 'Language',
+    position: 'Position',
+    display: 'Display',
+    primaryDisplay: 'Primary display',
+    primarySuffix: ' (Primary)',
+    opacity: 'Opacity',
+    size: 'Size',
+    startOnLogin: 'Start at login',
+    alignments: {
+      'top-center': 'Top center',
+      'top-left': 'Top left',
+      'top-right': 'Top right'
+    }
+  }
 };
 
-const ALIGNMENTS = Object.keys(ALIGNMENT_LABELS) as OverlayAlignment[];
+const ALIGNMENTS: OverlayAlignment[] = ['top-center', 'top-left', 'top-right'];
+const LANGUAGES: OverlayLanguage[] = ['zh-CN', 'en-US'];
 
 export function SettingsApp() {
   const [state, setState] = useState<CodexLightSettingsState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState(false);
   const codexLight = window.codexLight;
+  const language = state?.settings.language ?? 'zh-CN';
+  const copy = COPY[language];
 
   useEffect(() => {
     if (!codexLight) return undefined;
@@ -38,7 +90,7 @@ export function SettingsApp() {
     const cleanup = codexLight.onSettingsChanged((nextState) => {
       setState(nextState);
       setLoadError(null);
-      setSaveError(null);
+      setSaveError(false);
     });
 
     return () => {
@@ -54,9 +106,9 @@ export function SettingsApp() {
       try {
         const nextState = await codexLight.updateSettings(patch);
         setState(nextState);
-        setSaveError(null);
+        setSaveError(false);
       } catch {
-        setSaveError('设置保存失败');
+        setSaveError(true);
       }
     };
 
@@ -66,7 +118,7 @@ export function SettingsApp() {
   if (!codexLight || loadError) {
     return (
       <main className="settings-surface">
-        <p className="settings-fallback">{loadError ?? '设置暂不可用'}</p>
+        <p className="settings-fallback">{loadError ?? copy.unavailable}</p>
       </main>
     );
   }
@@ -74,7 +126,7 @@ export function SettingsApp() {
   if (!state) {
     return (
       <main className="settings-surface">
-        <p className="settings-fallback">正在载入设置...</p>
+        <p className="settings-fallback">{copy.loading}</p>
       </main>
     );
   }
@@ -82,14 +134,30 @@ export function SettingsApp() {
   return (
     <main className="settings-surface">
       <header className="settings-header">
-        <h1>Codex Light 设置</h1>
+        <h1>{copy.title}</h1>
       </header>
 
       <form className="settings-form">
-        {saveError && <p className="settings-error" role="alert">{saveError}</p>}
+        {saveError && <p className="settings-error" role="alert">{copy.saveError}</p>}
 
         <label className="settings-field">
-          <span>位置</span>
+          <span>{copy.language}</span>
+          <select
+            value={state.settings.language}
+            onChange={(event) => {
+              updateSettings({ language: event.target.value as OverlayLanguage });
+            }}
+          >
+            {LANGUAGES.map((option) => (
+              <option key={option} value={option}>
+                {option === 'zh-CN' ? '中文' : 'English'}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="settings-field">
+          <span>{copy.position}</span>
           <select
             value={state.settings.alignment}
             onChange={(event) => {
@@ -98,31 +166,31 @@ export function SettingsApp() {
           >
             {ALIGNMENTS.map((alignment) => (
               <option key={alignment} value={alignment}>
-                {ALIGNMENT_LABELS[alignment]}
+                {copy.alignments[alignment]}
               </option>
             ))}
           </select>
         </label>
 
         <label className="settings-field">
-          <span>显示器</span>
+          <span>{copy.display}</span>
           <select
             value={String(state.settings.targetDisplayId)}
             onChange={(event) => {
               updateSettings({ targetDisplayId: displayValueFromSelect(event.target.value) });
             }}
           >
-            <option value="primary">主显示器</option>
+            <option value="primary">{copy.primaryDisplay}</option>
             {state.displays.map((display) => (
               <option key={display.id} value={display.id}>
-                {displayLabel(display)}
+                {displayLabel(display, copy.primarySuffix)}
               </option>
             ))}
           </select>
         </label>
 
         <label className="settings-field settings-range">
-          <span>透明度</span>
+          <span>{copy.opacity}</span>
           <input
             type="range"
             min="72"
@@ -137,7 +205,7 @@ export function SettingsApp() {
         </label>
 
         <label className="settings-field settings-range">
-          <span>尺寸</span>
+          <span>{copy.size}</span>
           <input
             type="range"
             min="85"
@@ -159,7 +227,7 @@ export function SettingsApp() {
               updateSettings({ startOnLogin: event.target.checked });
             }}
           />
-          <span>开机启动</span>
+          <span>{copy.startOnLogin}</span>
         </label>
       </form>
     </main>
@@ -168,15 +236,15 @@ export function SettingsApp() {
 
 type SettingsPatch = Pick<
   Partial<OverlaySettings>,
-  'alignment' | 'targetDisplayId' | 'opacity' | 'sizeScale' | 'startOnLogin'
+  'alignment' | 'targetDisplayId' | 'opacity' | 'sizeScale' | 'startOnLogin' | 'language'
 >;
 
 function displayValueFromSelect(value: string): OverlayTargetDisplayId {
   return value === 'primary' ? value : Number(value);
 }
 
-function displayLabel(display: OverlayDisplayInfo): string {
-  return display.isPrimary ? `${display.label}（主）` : display.label;
+function displayLabel(display: OverlayDisplayInfo, primarySuffix: string): string {
+  return display.isPrimary ? `${display.label}${primarySuffix}` : display.label;
 }
 
 function percentValue(value: number): number {

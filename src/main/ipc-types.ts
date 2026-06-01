@@ -15,7 +15,7 @@ export interface CodexLightSettingsState {
 
 export interface CodexLightApi {
   onSnapshot(callback: (snapshot: CodexLightSnapshot) => void): () => void;
-  setPinnedExpanded(value: boolean): void;
+  setPinnedExpanded(value: boolean): Promise<void>;
   getSettings(): Promise<CodexLightSettingsState>;
   updateSettings(patch: Partial<OverlaySettings>): Promise<CodexLightSettingsState>;
   onSettingsChanged(callback: (state: CodexLightSettingsState) => void): () => void;

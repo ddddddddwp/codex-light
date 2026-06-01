@@ -10,7 +10,8 @@ const baseState: CodexLightSettingsState = {
     targetDisplayId: 2,
     opacity: 0.84,
     sizeScale: 1.1,
-    startOnLogin: true
+    startOnLogin: true,
+    language: 'zh-CN'
   },
   displays: [
     {
@@ -56,7 +57,7 @@ function installApi(initialState: CodexLightSettingsState = baseState) {
 
   window.codexLight = {
     onSnapshot: vi.fn(),
-    setPinnedExpanded: vi.fn(),
+    setPinnedExpanded: vi.fn(async () => undefined),
     getSettings,
     updateSettings,
     onSettingsChanged
@@ -96,6 +97,7 @@ describe('SettingsApp', () => {
     expect(screen.getByRole('checkbox', { name: /开机启动/ })).toBeChecked();
     expect(screen.getByRole('option', { name: /Built-in Display（主）/ })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: '主显示器' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /语言/ })).toHaveValue('zh-CN');
   });
 
   it('updates alignment, opacity, size, and startup controls through updateSettings', async () => {
@@ -145,6 +147,26 @@ describe('SettingsApp', () => {
       expect(api.updateSettings).toHaveBeenLastCalledWith({ startOnLogin: true });
     });
     expect(screen.getByRole('checkbox', { name: /开机启动/ })).toBeChecked();
+  });
+
+  it('switches the settings surface between Chinese and English', async () => {
+    const api = installApi();
+
+    render(<SettingsApp />);
+
+    expect(await screen.findByRole('heading', { name: 'Codex Light 设置' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('combobox', { name: /语言/ }), {
+      target: { value: 'en-US' }
+    });
+
+    await waitFor(() => {
+      expect(api.updateSettings).toHaveBeenLastCalledWith({ language: 'en-US' });
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Codex Light Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Language/ })).toHaveValue('en-US');
+    expect(screen.getByRole('checkbox', { name: /Start at login/ })).toBeChecked();
   });
 
   it('updates display selection as primary and numeric target ids', async () => {
@@ -206,7 +228,8 @@ describe('SettingsApp', () => {
           targetDisplayId: 'primary',
           opacity: 0.72,
           sizeScale: 0.9,
-          startOnLogin: false
+          startOnLogin: false,
+          language: 'zh-CN'
         }
       });
     });

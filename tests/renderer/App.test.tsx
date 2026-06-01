@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CodexLightSnapshot } from '../../src/core/types';
 import { App } from '../../src/renderer/App';
@@ -25,7 +25,9 @@ const snapshot: CodexLightSnapshot = {
 };
 
 afterEach(() => {
+  delete window.codexLight;
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('App', () => {
@@ -51,6 +53,61 @@ describe('App', () => {
     );
 
     expect(screen.getByText('3')).toBeInTheDocument();
+  });
+
+  it('waits for the overlay window to resize before rendering expanded details', async () => {
+    const resize = createDeferred<void>();
+    installApi({ setPinnedExpanded: vi.fn(() => resize.promise) });
+
+    render(<App initialSnapshot={snapshot} initialExpanded={false} />);
+
+    fireEvent.mouseEnter(screen.getByRole('main'));
+
+    expect(window.codexLight?.setPinnedExpanded).toHaveBeenCalledWith(true);
+    expect(screen.queryByText('Waiting for approval: Bash')).not.toBeInTheDocument();
+
+    await act(async () => {
+      resize.resolve();
+      await resize.promise;
+    });
+
+    expect(await screen.findByText('Waiting for approval: Bash')).toBeInTheDocument();
+  });
+
+  it('renders only the primary session in expanded preview while keeping the total count', () => {
+    render(
+      <App
+        initialSnapshot={{
+          ...snapshot,
+          activeSessionCount: 3,
+          sessions: [
+            snapshot.sessions[0],
+            {
+              ...snapshot.sessions[0],
+              sessionId: 'session-2',
+              projectName: 'other-project',
+              cwd: 'C:\\code\\other',
+              action: 'Running Python'
+            },
+            {
+              ...snapshot.sessions[0],
+              sessionId: 'session-3',
+              projectName: 'third-project',
+              cwd: 'C:\\code\\third',
+              action: 'Reading files'
+            }
+          ]
+        }}
+        initialExpanded
+        initialNow={new Date('2026-05-31T00:00:05.000Z')}
+      />
+    );
+
+    expect(screen.getByText('Waiting for approval: Bash')).toBeInTheDocument();
+    expect(screen.getByText('3 个会话')).toBeInTheDocument();
+    expect(screen.queryByText('Running Python')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reading files')).not.toBeInTheDocument();
+    expect(screen.queryByText('C:\\code\\other')).not.toBeInTheDocument();
   });
 
   it('renders expanded session metadata with elapsed time', () => {
@@ -205,4 +262,92 @@ describe('App', () => {
 
     expect(screen.getAllByText('暂无活动会话')).toHaveLength(2);
   });
+
+  it('renders expanded labels in English when settings language is English', async () => {
+    installApi({
+      getSettings: vi.fn(async () => ({
+        settings: {
+          version: 1,
+          alignment: 'top-center',
+          targetDisplayId: 'primary',
+          opacity: 0.96,
+          sizeScale: 1,
+          startOnLogin: false,
+          language: 'en-US'
+        },
+        displays: []
+      }))
+    });
+
+    render(
+      <App
+        initialSnapshot={snapshot}
+        initialExpanded
+        initialNow={new Date('2026-05-31T00:00:05.000Z')}
+      />
+    );
+
+    expect(await screen.findByText('Action')).toBeInTheDocument();
+    expect(screen.getByText('Model')).toBeInTheDocument();
+    expect(screen.getByText('Working directory')).toBeInTheDocument();
+    expect(screen.getByText('Elapsed')).toBeInTheDocument();
+    expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('1 session')).toBeInTheDocument();
+  });
+
+  it('applies the configured size scale to the island frame', async () => {
+    installApi({
+      getSettings: vi.fn(async () => ({
+        settings: {
+          version: 1,
+          alignment: 'top-center',
+          targetDisplayId: 'primary',
+          opacity: 0.96,
+          sizeScale: 0.85,
+          startOnLogin: false,
+          language: 'zh-CN'
+        },
+        displays: []
+      }))
+    });
+
+    render(<App initialSnapshot={snapshot} initialExpanded />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('main')).toHaveStyle({ '--island-scale': '0.85' });
+    });
+  });
 });
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
+function installApi(overrides: Partial<NonNullable<typeof window.codexLight>> = {}) {
+  window.codexLight = {
+    onSnapshot: vi.fn(() => vi.fn()),
+    setPinnedExpanded: vi.fn(async () => undefined),
+    getSettings: vi.fn(async () => ({
+      settings: {
+        version: 1,
+        alignment: 'top-center',
+        targetDisplayId: 'primary',
+        opacity: 0.96,
+        sizeScale: 1,
+        startOnLogin: false,
+        language: 'zh-CN'
+      },
+      displays: []
+    })),
+    updateSettings: vi.fn(),
+    onSettingsChanged: vi.fn(() => vi.fn()),
+    ...overrides
+  };
+}

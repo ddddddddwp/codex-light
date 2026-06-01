@@ -17,7 +17,8 @@ describe('overlay settings', () => {
       targetDisplayId: 'primary',
       opacity: 0.96,
       sizeScale: 1,
-      startOnLogin: false
+      startOnLogin: false,
+      language: 'zh-CN'
     });
   });
 
@@ -32,6 +33,8 @@ describe('overlay settings', () => {
     expect(normalizeOverlaySettings({ targetDisplayId: Number.POSITIVE_INFINITY }).targetDisplayId).toBe('primary');
     expect(normalizeOverlaySettings({ targetDisplayId: 1.5 }).targetDisplayId).toBe('primary');
     expect(normalizeOverlaySettings({ startOnLogin: 'yes' }).startOnLogin).toBe(false);
+    expect(normalizeOverlaySettings({ language: 'fr-FR' }).language).toBe('zh-CN');
+    expect(normalizeOverlaySettings({ language: 'en-US' }).language).toBe('en-US');
   });
 
   it('loads fresh defaults when the settings file is missing or contains bad JSON', async () => {
@@ -76,7 +79,8 @@ describe('overlay settings', () => {
         targetDisplayId: 7,
         opacity: 0.8,
         sizeScale: 1.1,
-        startOnLogin: true
+        startOnLogin: true,
+        language: 'en-US'
       });
 
       const fileContents = await readFile(join(userDataDir, 'overlay-settings.json'), 'utf8');
@@ -87,7 +91,8 @@ describe('overlay settings', () => {
         targetDisplayId: 7,
         opacity: 0.8,
         sizeScale: 1.1,
-        startOnLogin: true
+        startOnLogin: true,
+        language: 'en-US'
       }, null, 2)}\n`);
       await expect(loadOverlaySettings(userDataDir)).resolves.toEqual({
         version: 1,
@@ -95,7 +100,8 @@ describe('overlay settings', () => {
         targetDisplayId: 7,
         opacity: 0.8,
         sizeScale: 1.1,
-        startOnLogin: true
+        startOnLogin: true,
+        language: 'en-US'
       });
     } finally {
       await rm(userDataDir, { recursive: true, force: true });

@@ -10,7 +10,7 @@ const api: CodexLightApi = {
     return () => ipcRenderer.off('snapshot', listener);
   },
   setPinnedExpanded(value: boolean) {
-    ipcRenderer.send('set-pinned-expanded', value);
+    return ipcRenderer.invoke('set-pinned-expanded', value) as Promise<void>;
   },
   getSettings() {
     return ipcRenderer.invoke('settings:get') as Promise<CodexLightSettingsState>;
