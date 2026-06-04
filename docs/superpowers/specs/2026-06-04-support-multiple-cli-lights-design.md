@@ -2,6 +2,8 @@
 astrolabe_change: support-multiple-cli-lights
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-06-04-support-multiple-cli-lights
+status: final
 ---
 
 # 多 CLI 红绿灯显示技术设计

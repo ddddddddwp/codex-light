@@ -2,6 +2,7 @@
 change: support-multiple-cli-lights
 design-doc: docs/superpowers/specs/2026-06-04-support-multiple-cli-lights-design.md
 base-ref: 47a9b68e1d0a8ae5c05e733fb56fd8121f70d077
+archived-with: 2026-06-04-support-multiple-cli-lights
 ---
 
 # Multiple CLI Traffic Lights Implementation Plan
@@ -13,8 +14,6 @@ base-ref: 47a9b68e1d0a8ae5c05e733fb56fd8121f70d077
 **Architecture:** Keep ingestion and snapshot types unchanged. Add a renderer-only display-session derivation helper in `src/renderer/App.tsx`, use it for compact and expanded rendering, and update CSS/tests around the new per-session light group.
 
 **Tech Stack:** React 19, TypeScript, CSS, Vitest + Testing Library, Playwright visual tests.
-
----
 
 ## Worktree Rules
 
