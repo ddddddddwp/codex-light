@@ -8,6 +8,7 @@ import type {
 } from './types';
 
 export const DEFAULT_CLI_SESSION_STALE_MS = 120_000;
+export const DEFAULT_CLI_INACTIVE_SESSION_RETAIN_MS = 15_000;
 
 const PRIORITY: Record<CodexLightState, number> = {
   waiting: 5,
@@ -40,6 +41,7 @@ const PERMISSION_GATED_TOOLS = new Set([
 ]);
 
 const STALE_CLI_STATES = new Set<CodexLightState>(['running', 'waiting']);
+const INACTIVE_CLI_STATES = new Set<CodexLightState>(['idle', 'completed']);
 
 export function normalizeHookPayload(input: unknown, now = new Date()): CodexLightEvent {
   if (!isRecord(input)) {
@@ -133,12 +135,15 @@ export function aggregateSessions(events: CodexLightEvent[], now = new Date()): 
 export function expireStaleCliSessions(
   snapshot: CodexLightSnapshot,
   now = new Date(),
-  staleMs = DEFAULT_CLI_SESSION_STALE_MS
+  staleMs = DEFAULT_CLI_SESSION_STALE_MS,
+  inactiveRetainMs = DEFAULT_CLI_INACTIVE_SESSION_RETAIN_MS
 ): CodexLightSnapshot {
   const nowMs = now.getTime();
-  if (!Number.isFinite(nowMs) || staleMs <= 0) return snapshot;
+  if (!Number.isFinite(nowMs) || (staleMs <= 0 && inactiveRetainMs <= 0)) return snapshot;
 
-  const sessions = snapshot.sessions.filter((session) => !isStaleCliSession(session, nowMs, staleMs));
+  const sessions = snapshot.sessions.filter((session) => (
+    !isExpiredCliSession(session, nowMs, staleMs, inactiveRetainMs)
+  ));
   if (sessions.length === snapshot.sessions.length) return snapshot;
 
   const expiredCount = snapshot.sessions.length - sessions.length;
@@ -151,18 +156,31 @@ export function expireStaleCliSessions(
       ...snapshot.diagnostics,
       {
         level: 'warning',
-        message: `Expired ${expiredCount} stale CLI session${expiredCount === 1 ? '' : 's'} after ${Math.round(staleMs / 1000)} seconds without hook updates.`,
+        message: `Expired ${expiredCount} stale or inactive CLI session${expiredCount === 1 ? '' : 's'}.`,
         createdAt: now.toISOString()
       }
     ]
   };
 }
 
-function isStaleCliSession(session: CodexSession, nowMs: number, staleMs: number): boolean {
-  if (session.source !== 'cli' || !STALE_CLI_STATES.has(session.state)) return false;
-
+function isExpiredCliSession(
+  session: CodexSession,
+  nowMs: number,
+  staleMs: number,
+  inactiveRetainMs: number
+): boolean {
+  if (session.source !== 'cli') return false;
   const updatedAtMs = Date.parse(session.updatedAt);
-  return Number.isFinite(updatedAtMs) && nowMs - updatedAtMs > staleMs;
+  if (!Number.isFinite(updatedAtMs)) return false;
+
+  const ageMs = nowMs - updatedAtMs;
+  if (staleMs > 0 && STALE_CLI_STATES.has(session.state)) {
+    return ageMs > staleMs;
+  }
+  if (inactiveRetainMs > 0 && INACTIVE_CLI_STATES.has(session.state)) {
+    return ageMs > inactiveRetainMs;
+  }
+  return false;
 }
 
 function activeSessionCount(sessions: CodexSession[]): number {

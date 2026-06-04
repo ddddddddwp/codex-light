@@ -1,6 +1,6 @@
 {
   "name": "codex-light",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "author": "Codex Light Contributors",
   "license": "MIT",
   "private": true,
@@ -41,6 +41,7 @@
     "test:watch": "vitest",
     "test:visual": "playwright test",
     "package:win": "npm run build && electron-builder --win --x64",
+    "package:win:desktop": "node scripts/package-win-desktop.mjs",
     "package:win:dir": "npm run build && electron-builder --win --x64 --dir"
   },
   "dependencies": {
@@ -79,7 +80,10 @@
     "productName": "Codex Light",
     "artifactName": "Codex-Light-Setup-${version}.${ext}",
     "files": [
-      "dist/**/*",
+      "dist/main/**/*",
+      "dist/preload/**/*",
+      "dist/hook-cli/**/*",
+      "dist/renderer/**/*",
       "package.json"
     ],
     "win": {

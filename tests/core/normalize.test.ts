@@ -109,4 +109,18 @@ describe('normalizeHookPayload', () => {
     expect(expired.activeSessionCount).toBe(0);
     expect(expired.sessions).toEqual([]);
   });
+
+  it('keeps inactive CLI sessions for 15 seconds before expiring them', () => {
+    const completed = normalizeHookPayload(stop, new Date('2026-05-31T00:00:00.000Z'));
+    const snapshot = aggregateSessions([completed], new Date('2026-05-31T00:00:00.000Z'));
+
+    const retained = expireStaleCliSessions(snapshot, new Date('2026-05-31T00:00:15.000Z'));
+    const expired = expireStaleCliSessions(snapshot, new Date('2026-05-31T00:00:15.001Z'));
+
+    expect(retained.sessions).toHaveLength(1);
+    expect(retained.globalState).toBe('completed');
+    expect(expired.sessions).toEqual([]);
+    expect(expired.globalState).toBe('idle');
+    expect(expired.activeSessionCount).toBe(0);
+  });
 });

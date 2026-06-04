@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import { aggregateSessions, normalizeHookPayload } from '../core/normalize';
+import { aggregateSessions, expireStaleCliSessions, normalizeHookPayload } from '../core/normalize';
 import { getRuntimeDir } from '../core/runtime-paths';
 import { appendEvent, readEvents, writeSnapshotAtomic } from '../core/storage';
 import { doctor } from './doctor';
@@ -13,7 +13,8 @@ export async function handleHookInput(input: string, runtimeDir = getRuntimeDir(
     const event = normalizeHookPayload(parsed);
     await appendEvent(runtimeDir, event);
     const events = await readEvents(runtimeDir);
-    await writeSnapshotAtomic(runtimeDir, aggregateSessions(events));
+    const now = new Date();
+    await writeSnapshotAtomic(runtimeDir, expireStaleCliSessions(aggregateSessions(events, now), now));
     return 0;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

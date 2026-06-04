@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import type { CodexLightEvent, CodexLightSnapshot } from './types';
 import { getEventLogFile, getStateFile } from './runtime-paths';
 
@@ -23,9 +24,15 @@ export async function readEvents(runtimeDir: string): Promise<CodexLightEvent[]>
 export async function writeSnapshotAtomic(runtimeDir: string, snapshot: CodexLightSnapshot): Promise<void> {
   await fs.mkdir(runtimeDir, { recursive: true });
   const target = getStateFile(runtimeDir);
-  const temp = `${target}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(snapshot, null, 2), 'utf8');
-  await fs.rename(temp, target);
+  const temp = `${target}.${process.pid}.${randomUUID()}.tmp`;
+
+  try {
+    await fs.writeFile(temp, JSON.stringify(snapshot, null, 2), 'utf8');
+    await fs.rename(temp, target);
+  } catch (error) {
+    await fs.unlink(temp).catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function readSnapshot(runtimeDir: string): Promise<CodexLightSnapshot | null> {

@@ -49,20 +49,17 @@ describe('installer scripts', () => {
     expect(installerInclude).toContain('!macro customPageAfterChangeDir');
     expect(installerInclude).toContain('Page custom StartOnLoginPageCreate StartOnLoginPageLeave');
     expect(installerInclude).toContain('Start Codex Light when I sign in');
-    expect(installerInclude).toContain('${If} ${FileExists} "$SMSTARTUP\\Codex Light.lnk"');
+    expect(installerInclude).toContain('!define STARTUP_SHORTCUT "$APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Codex Light.lnk"');
+    expect(installerInclude).toContain('${If} ${FileExists} "${STARTUP_SHORTCUT}"');
     expect(installerInclude).toContain('${NSD_Check} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('${NSD_Uncheck} $StartOnLoginCheckbox');
     expect(installerInclude).toContain('!macro customInstall');
-    expect(installerInclude).toContain('Var StartupShellWasAllUsers');
-    expect(installerInclude).toContain('${If} $installMode == "all"');
-    expect(installerInclude).toContain('StrCpy $StartupShellWasAllUsers "1"');
-    expect(installerInclude).toContain('SetShellVarContext current');
-    expect(installerInclude).toContain('${If} $StartupShellWasAllUsers == "1"');
+    expect(installerInclude).not.toContain('$installMode');
     expect(installerInclude).toContain('${ElseIf} $StartOnLoginState == ${BST_UNCHECKED}');
-    expect(installerInclude).toContain('CreateShortCut "$SMSTARTUP\\Codex Light.lnk"');
+    expect(installerInclude).toContain('CreateShortCut "${STARTUP_SHORTCUT}"');
     expect(installerInclude).toContain('!macro customUnInstall');
     expect(installerInclude).toContain('${IfNot} ${isUpdated}');
-    expect(installerInclude).toContain('Delete "$SMSTARTUP\\Codex Light.lnk"');
+    expect(installerInclude).toContain('Delete "${STARTUP_SHORTCUT}"');
   });
 
   it('provides a Win11 installer that installs the app and shortcuts per user', () => {

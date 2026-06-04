@@ -11,6 +11,7 @@ const baseState: CodexLightSettingsState = {
     opacity: 0.84,
     sizeScale: 1.1,
     startOnLogin: true,
+    trafficLightPreviewEnabled: true,
     language: 'zh-CN'
   },
   displays: [
@@ -98,6 +99,49 @@ describe('SettingsApp', () => {
     expect(screen.getByRole('option', { name: /Built-in Display（主）/ })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: '主显示器' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /语言/ })).toHaveValue('zh-CN');
+  });
+
+  it('shows a local traffic-light preview when preview support is enabled', async () => {
+    installApi({
+      ...baseState,
+      settings: {
+        ...baseState.settings,
+        trafficLightPreviewEnabled: true
+      }
+    });
+
+    render(<SettingsApp />);
+
+    expect(await screen.findByLabelText('红绿灯预览')).toBeInTheDocument();
+    expect(screen.getByText('codex-light')).toBeInTheDocument();
+  });
+
+  it('hides the local traffic-light preview when preview support is disabled', async () => {
+    installApi({
+      ...baseState,
+      settings: {
+        ...baseState.settings,
+        trafficLightPreviewEnabled: false
+      }
+    });
+
+    render(<SettingsApp />);
+
+    expect(await screen.findByLabelText('允许预览红绿灯')).not.toBeChecked();
+    expect(screen.queryByLabelText('红绿灯预览')).not.toBeInTheDocument();
+  });
+
+  it('updates preview support without changing the live overlay expansion state', async () => {
+    const api = installApi();
+
+    render(<SettingsApp />);
+
+    fireEvent.click(await screen.findByLabelText('允许预览红绿灯'));
+
+    await waitFor(() => {
+      expect(api.updateSettings).toHaveBeenCalledWith({ trafficLightPreviewEnabled: false });
+    });
+    expect(window.codexLight?.setPinnedExpanded).not.toHaveBeenCalled();
   });
 
   it('updates alignment, opacity, size, and startup controls through updateSettings', async () => {
