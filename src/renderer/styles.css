@@ -63,6 +63,15 @@ body,
   padding: 0 18px;
 }
 
+.status-lights {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  max-width: 112px;
+  gap: 5px;
+  overflow: hidden;
+}
+
 .status-dot {
   width: 12px;
   height: 12px;
@@ -73,22 +82,44 @@ body,
   flex: 0 0 auto;
 }
 
-.state-running .status-dot {
+.session-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  color: #ff5d5d;
+  background: #ff5d5d;
+  box-shadow: 0 0 14px currentColor;
+  flex: 0 0 auto;
+}
+
+.state-running .status-dot,
+.session-light.state-running {
   color: #31d27c;
   background: #31d27c;
 }
 
-.state-waiting .status-dot {
+.state-waiting .status-dot,
+.session-light.state-waiting {
   color: #ffd43b;
   background: #ffd43b;
-  animation: pulse 1.2s ease-in-out infinite;
+  animation: pulse 1s ease-in-out infinite;
 }
 
 .state-idle .status-dot,
 .state-completed .status-dot,
-.state-error .status-dot {
+.state-error .status-dot,
+.session-light.state-idle,
+.session-light.state-completed,
+.session-light.state-error {
   color: #ff5d5d;
   background: #ff5d5d;
+}
+
+.state-completed .status-dot,
+.state-error .status-dot,
+.session-light.state-completed,
+.session-light.state-error {
+  animation: pulse 1s ease-in-out infinite;
 }
 
 .summary-text {
@@ -114,7 +145,9 @@ body,
 
 .details {
   display: grid;
-  gap: 6px;
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
   padding: 0 16px 10px;
 }
 
@@ -199,6 +232,10 @@ body,
 
 .meta-source {
   flex-basis: 102px;
+}
+
+.meta-state {
+  flex-basis: 72px;
 }
 
 .meta-count {

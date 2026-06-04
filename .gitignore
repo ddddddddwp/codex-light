@@ -12,3 +12,6 @@ playwright-report/
 .worktrees/
 .agents/
 .codex/
+openspec/
+.idea/
+.agent/

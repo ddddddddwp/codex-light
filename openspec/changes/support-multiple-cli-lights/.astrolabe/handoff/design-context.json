@@ -1,0 +1,14 @@
+{
+  "change": "support-multiple-cli-lights",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "ast-handoff.sh",
+  "context_hash": "386337799222e94515f3f1506f9838bae9f91a2eb821a34f60f9fb2e6b5f9a01",
+  "files": [
+    { "path": "openspec/changes/support-multiple-cli-lights/proposal.md", "sha256": "143486f04302c9d81aa779286c1a7d203d124ca735c4ea222142700a545fb27d" },
+    { "path": "openspec/changes/support-multiple-cli-lights/design.md", "sha256": "4495a1cc0b72de41730e837e449e07d1a1e21c0c320609d54e68437a86d6e0e3" },
+    { "path": "openspec/changes/support-multiple-cli-lights/tasks.md", "sha256": "04e10599f45abf40d4ce8c23d7641f2c38c0e8f814aa963773714b1acdb85714" },
+    { "path": "openspec/changes/support-multiple-cli-lights/specs/top-island-overlay/spec.md", "sha256": "7a3d28e811251cb277d8fa9073088a8a14e77f27d68489d693d6ec73255211b1" }
+  ]
+}

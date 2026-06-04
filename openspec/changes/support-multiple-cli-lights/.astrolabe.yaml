@@ -1,0 +1,16 @@
+workflow: full
+phase: verify
+build_mode: executing-plans
+isolation: branch
+verify_mode: full
+base_ref: 47a9b68e1d0a8ae5c05e733fb56fd8121f70d077
+design_doc: docs/superpowers/specs/2026-06-04-support-multiple-cli-lights-design.md
+plan: docs/superpowers/plans/2026-06-04-support-multiple-cli-lights.md
+verify_result: pending
+verification_report: docs/superpowers/reports/2026-06-04-support-multiple-cli-lights-verify.md
+branch_status: pending
+created_at: 2026-06-04
+verified_at: null
+archived: false
+handoff_context: openspec/changes/support-multiple-cli-lights/.astrolabe/handoff/design-context.json
+handoff_hash: 386337799222e94515f3f1506f9838bae9f91a2eb821a34f60f9fb2e6b5f9a01

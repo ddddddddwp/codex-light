@@ -143,7 +143,7 @@ describe('App', () => {
     expect(setPinnedExpanded).toHaveBeenCalledWith(false);
   });
 
-  it('renders only the primary session in expanded preview while keeping the total count', () => {
+  it('renders expanded details for displayed sessions while keeping the total count', () => {
     render(
       <App
         initialSnapshot={{
@@ -173,10 +173,10 @@ describe('App', () => {
     );
 
     expect(screen.getByText('Waiting for approval: Bash')).toBeInTheDocument();
-    expect(screen.getByText('3 个会话')).toBeInTheDocument();
-    expect(screen.queryByText('Running Python')).not.toBeInTheDocument();
-    expect(screen.queryByText('Reading files')).not.toBeInTheDocument();
-    expect(screen.queryByText('C:\\code\\other')).not.toBeInTheDocument();
+    expect(screen.getByText('Running Python')).toBeInTheDocument();
+    expect(screen.getByText('Reading files')).toBeInTheDocument();
+    expect(screen.getByText('C:\\code\\other')).toBeInTheDocument();
+    expect(screen.getAllByText('3 个会话')).toHaveLength(3);
   });
 
   it('renders expanded session metadata with elapsed time', () => {
@@ -194,10 +194,12 @@ describe('App', () => {
     expect(screen.getByText('工作目录')).toBeInTheDocument();
     expect(screen.getByText('耗时')).toBeInTheDocument();
     expect(screen.getByText('来源')).toBeInTheDocument();
+    expect(screen.getByText('状态')).toBeInTheDocument();
     expect(screen.getByText('会话')).toBeInTheDocument();
     expect(screen.getByText('gpt-5.5')).toBeInTheDocument();
     expect(screen.getByText('C:\\code\\demo')).toBeInTheDocument();
     expect(screen.getByText('cli')).toBeInTheDocument();
+    expect(screen.getByText('waiting')).toBeInTheDocument();
     expect(screen.getByText('1 个会话')).toBeInTheDocument();
     expect(screen.getByText('5s')).toBeInTheDocument();
     expect(screen.queryByText('2s')).not.toBeInTheDocument();
@@ -310,13 +312,13 @@ describe('App', () => {
       />
     );
 
-    expect(screen.getByText('session-without-metadata')).toBeInTheDocument();
+    expect(screen.getAllByText('session-without-metadata')).toHaveLength(2);
     expect(screen.getByText('未报告动作')).toBeInTheDocument();
     expect(screen.getByText('未知模型')).toBeInTheDocument();
     expect(screen.getByText('未知工作目录')).toBeInTheDocument();
   });
 
-  it('renders localized idle fallback', () => {
+  it('renders English idle fallback when there are no sessions', () => {
     render(
       <App
         initialSnapshot={{
@@ -329,7 +331,56 @@ describe('App', () => {
       />
     );
 
-    expect(screen.getAllByText('暂无活动会话')).toHaveLength(2);
+    expect(screen.getAllByText('No active sessions')).toHaveLength(2);
+    expect(screen.queryByText('暂无活动会话')).not.toBeInTheDocument();
+  });
+
+  it('renders one compact traffic light per displayed session', () => {
+    render(
+      <App
+        initialSnapshot={{
+          ...snapshot,
+          activeSessionCount: 3,
+          sessions: [
+            snapshot.sessions[0],
+            { ...snapshot.sessions[0], sessionId: 'running-session', state: 'running', projectName: 'runner' },
+            { ...snapshot.sessions[0], sessionId: 'completed-session', state: 'completed', projectName: 'done' }
+          ]
+        }}
+        initialExpanded={false}
+      />
+    );
+
+    expect(screen.getAllByTestId('session-light')).toHaveLength(3);
+    expect(screen.getByTitle('demo: waiting')).toBeInTheDocument();
+    expect(screen.getByTitle('runner: running')).toBeInTheDocument();
+    expect(screen.getByTitle('done: completed')).toBeInTheDocument();
+  });
+
+  it('caps displayed traffic lights at 10 and prioritizes active recent sessions', () => {
+    const sessions = Array.from({ length: 12 }, (_, index) => ({
+      ...snapshot.sessions[0],
+      sessionId: `session-${index}`,
+      projectName: `project-${index}`,
+      state: index === 0 ? 'idle' as const : 'running' as const,
+      updatedAt: `2026-05-31T00:00:${String(index).padStart(2, '0')}.000Z`
+    }));
+
+    render(
+      <App
+        initialSnapshot={{
+          ...snapshot,
+          activeSessionCount: 11,
+          sessions
+        }}
+        initialExpanded
+        initialNow={new Date('2026-05-31T00:00:20.000Z')}
+      />
+    );
+
+    expect(screen.getAllByTestId('session-light')).toHaveLength(10);
+    expect(screen.queryByText('project-0')).not.toBeInTheDocument();
+    expect(screen.getAllByText('project-11')).toHaveLength(2);
   });
 
   it('renders expanded labels in English when settings language is English', async () => {
@@ -362,6 +413,8 @@ describe('App', () => {
     expect(screen.getByText('Working directory')).toBeInTheDocument();
     expect(screen.getByText('Elapsed')).toBeInTheDocument();
     expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('State')).toBeInTheDocument();
+    expect(screen.getByText('waiting')).toBeInTheDocument();
     expect(screen.getByText('1 session')).toBeInTheDocument();
   });
 
